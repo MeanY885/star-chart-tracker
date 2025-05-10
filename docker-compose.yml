@@ -1,11 +1,11 @@
-version: '3.8'
+version: '2.2'
 
 services:
   # Development service
   dev:
     build:
       context: .
-      target: build
+      dockerfile: Dockerfile
     volumes:
       - .:/app
       - /app/node_modules
@@ -17,7 +17,9 @@ services:
 
   # Production service
   prod:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "1337:80"
     environment:
