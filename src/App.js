@@ -32,14 +32,8 @@ const rainbowKeyframes = `
 `;
 
 function App() {
-  const [points, setPoints] = useState(() => {
-    const saved = localStorage.getItem('daddyPoints');
-    return saved ? parseInt(saved) : 0;
-  });
-  const [starComments, setStarComments] = useState(() => {
-    const saved = localStorage.getItem('starComments');
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [points, setPoints] = useState(0);
+  const [starComments, setStarComments] = useState({});
   const [showCelebration, setShowCelebration] = useState(false);
   const [lastAction, setLastAction] = useState(null);
   const [showNewStar, setShowNewStar] = useState(false);
@@ -53,12 +47,40 @@ function App() {
     await loadSlim(engine);
   }, []);
 
+  // Load data from server
   useEffect(() => {
-    localStorage.setItem('daddyPoints', points.toString());
-    localStorage.setItem('starComments', JSON.stringify(starComments));
-    if (points >= 15) {
-      setShowCelebration(true);
+    fetch('/data/star-chart-data.json')
+      .then(response => response.json())
+      .catch(() => ({ points: 0, starComments: {} }))
+      .then(data => {
+        setPoints(data.points || 0);
+        setStarComments(data.starComments || {});
+      });
+  }, []);
+
+  // Save data to server
+  const saveData = async (newPoints, newComments) => {
+    try {
+      const response = await fetch('/data/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          points: newPoints,
+          starComments: newComments
+        })
+      });
+      if (!response.ok) {
+        console.error('Failed to save data');
+      }
+    } catch (error) {
+      console.error('Error saving data:', error);
     }
+  };
+
+  useEffect(() => {
+    saveData(points, starComments);
   }, [points, starComments]);
 
   const generateRandomAnimation = () => {
