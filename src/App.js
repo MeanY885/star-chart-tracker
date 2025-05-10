@@ -12,7 +12,7 @@ import {
   TextField,
   Tooltip
 } from '@mui/material';
-import { Star, AddCircle, RemoveCircle, Edit, EmojiEvents } from '@mui/icons-material';
+import { Star, AddCircle, RemoveCircle, Edit, EmojiEvents, Refresh } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback } from "react";
 import Particles from "react-tsparticles";
@@ -55,6 +55,9 @@ function App() {
       .then(data => {
         setPoints(data.points || 0);
         setStarComments(data.starComments || {});
+        if (data.points >= 15) {
+          setShowCelebration(true);
+        }
       });
   }, []);
 
@@ -81,6 +84,9 @@ function App() {
 
   useEffect(() => {
     saveData(points, starComments);
+    if (points >= 15) {
+      setShowCelebration(true);
+    }
   }, [points, starComments]);
 
   const generateRandomAnimation = () => {
@@ -508,10 +514,15 @@ function App() {
     setPoints(prev => Math.max(prev - 1, 0));
   };
 
-  const handleClaimPrize = () => {
-    setShowCelebration(false);
+  const handleReset = () => {
     setPoints(0);
     setStarComments({});
+    saveData(0, {});
+  };
+
+  const handleClaimPrize = () => {
+    setShowCelebration(false);
+    handleReset();
   };
 
   const handleCommentSave = () => {
@@ -882,6 +893,26 @@ function App() {
                   }}
                 >
                   <AddCircle sx={{ fontSize: { xs: 40, sm: 50, md: 60 }, color: '#FFF' }} />
+                </IconButton>
+              </motion.div>
+
+              <motion.div
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <IconButton 
+                  onClick={handleReset}
+                  sx={{ 
+                    p: { xs: 2, sm: 3 },
+                    background: 'linear-gradient(45deg, #FF9800, #FF5722)',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #FF5722, #FF9800)'
+                    }
+                  }}
+                >
+                  <Refresh sx={{ fontSize: { xs: 40, sm: 50, md: 60 }, color: '#FFF' }} />
                 </IconButton>
               </motion.div>
             </Box>
