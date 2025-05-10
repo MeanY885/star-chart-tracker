@@ -23,9 +23,9 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - star-chart-data:/usr/share/nginx/html/data
+      - star-chart-data:/app/data
     ports:
-      - "1337:80"
+      - "1337:3000"
     environment:
       - NODE_ENV=production
     restart: always
