@@ -12,7 +12,7 @@ import {
   TextField,
   Tooltip
 } from '@mui/material';
-import { Star, AddCircle, RemoveCircle, Edit, EmojiEvents, Refresh } from '@mui/icons-material';
+import { Star, AddCircle, RemoveCircle, Edit, EmojiEvents, Refresh, AutoAwesome } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback } from "react";
 import Particles from "react-tsparticles";
@@ -44,6 +44,7 @@ function App() {
   const [currentComment, setCurrentComment] = useState('');
   const [removingStar, setRemovingStar] = useState(false);
   const [removeStarPosition, setRemoveStarPosition] = useState({ x: 0, y: 0 });
+  const [isAmazingAnimation, setIsAmazingAnimation] = useState(false);
 
   const particlesInit = useCallback(async engine => {
     await loadSlim(engine);
@@ -185,6 +186,41 @@ function App() {
     setCommentDialogOpen(true);
   };
 
+  const handleAmazingAchievement = () => {
+    const newPoints = Math.min(points + 5, 15);
+    if (newPoints > points) {
+      setIsAmazingAnimation(true);
+      setLastAction('amazing');
+      
+      // Create multiple star animations
+      const starsToAdd = newPoints - points;
+      for (let i = 0; i < starsToAdd; i++) {
+        setTimeout(() => {
+          const targetIndex = points + i;
+          const starElement = document.querySelector(`[data-star-index="${targetIndex}"]`);
+          if (starElement) {
+            const rect = starElement.getBoundingClientRect();
+            setTargetPosition({ 
+              x: rect.left + rect.width / 2, 
+              y: rect.top + rect.height / 2 
+            });
+          }
+          setNewStarPosition({
+            x: Math.random() * window.innerWidth,
+            y: -100 - (i * 50) // Start each star higher than the last
+          });
+          setShowNewStar(true);
+        }, i * 1000); // Stagger the start of each star animation
+      }
+
+      // Update points after all animations
+      setTimeout(() => {
+        setPoints(newPoints);
+        setIsAmazingAnimation(false);
+      }, starsToAdd * 1000 + 8000);
+    }
+  };
+
   const particlesOptions = {
     particles: {
       number: { value: 50 },
@@ -201,6 +237,58 @@ function App() {
       },
       opacity: { value: 0.8 },
       life: { duration: { value: 2 } }
+    }
+  };
+
+  // Update particlesOptions for amazing achievement
+  const amazingParticlesOptions = {
+    particles: {
+      number: { value: 100 },
+      color: { 
+        value: ["#FFD700", "#FFA500", "#FF69B4", "#4CAF50", "#00BCD4"] 
+      },
+      shape: { 
+        type: ["star", "circle"],
+        options: {
+          star: {
+            sides: 5
+          }
+        }
+      },
+      size: { value: { min: 3, max: 8 } },
+      move: {
+        enable: true,
+        speed: 6,
+        direction: "top-to-bottom",
+        random: true,
+        straight: false,
+        outModes: "out"
+      },
+      opacity: { 
+        value: 0.8,
+        animation: {
+          enable: true,
+          speed: 0.5,
+          minimumValue: 0.1,
+          sync: false
+        }
+      },
+      rotate: {
+        value: 360,
+        direction: "random",
+        animation: {
+          enable: true,
+          speed: 10
+        }
+      },
+      tilt: {
+        enable: true,
+        value: 360,
+        animation: {
+          enable: true,
+          speed: 60
+        }
+      }
     }
   };
 
@@ -815,11 +903,11 @@ function App() {
         </motion.div>
       )}
 
-      {lastAction === 'add' && (
+      {(lastAction === 'add' || isAmazingAnimation) && (
         <Particles
           id="tsparticles"
           init={particlesInit}
-          options={particlesOptions}
+          options={isAmazingAnimation ? amazingParticlesOptions : particlesOptions}
           style={{
             position: 'fixed',
             top: 0,
@@ -948,6 +1036,26 @@ function App() {
                   }}
                 >
                   <AddCircle sx={{ fontSize: { xs: 40, sm: 50, md: 60 }, color: '#FFF' }} />
+                </IconButton>
+              </motion.div>
+
+              <motion.div
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <IconButton 
+                  onClick={handleAmazingAchievement}
+                  sx={{ 
+                    p: { xs: 2, sm: 3 },
+                    background: 'linear-gradient(45deg, #FF69B4, #FFD700)',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    '&:hover': {
+                      background: 'linear-gradient(45deg, #FFD700, #FF69B4)'
+                    }
+                  }}
+                >
+                  <AutoAwesome sx={{ fontSize: { xs: 40, sm: 50, md: 60 }, color: '#FFF' }} />
                 </IconButton>
               </motion.div>
 
