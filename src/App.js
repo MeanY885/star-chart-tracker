@@ -16,7 +16,7 @@ import {
   FormControl,
   InputLabel
 } from '@mui/material';
-import { Star, AddCircle, RemoveCircle, Edit, EmojiEvents, Refresh, AutoAwesome, Favorite, Cake, School, SportsScore, CleaningServices, LocalLibrary, Mood, FamilyRestroom, Pets } from '@mui/icons-material';
+import { Star, AddCircle, RemoveCircle, Edit, EmojiEvents, Refresh, AutoAwesome, Favorite, Cake, School, SportsScore, CleaningServices, LocalLibrary, Mood, FamilyRestroom, Pets, Check } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback } from "react";
 import Particles from "react-tsparticles";
@@ -54,6 +54,7 @@ function App() {
     description: "Choose any fun activity for a special family day!"
   });
   const [stickerType, setStickerType] = useState({});
+  const [isEditingReward, setIsEditingReward] = useState(false);
 
   const particlesInit = useCallback(async engine => {
     await loadSlim(engine);
@@ -855,9 +856,17 @@ function App() {
     { icon: Pets, label: 'Pets', color: '#607D8B' }
   ];
 
-  // Add this new component for the reward preview
-  const RewardPreview = ({ points, reward }) => {
+  // Modify the RewardPreview component to include editing
+  const RewardPreview = ({ points, reward, onEdit }) => {
     const starsToGo = reward.stars - points;
+    const [editedReward, setEditedReward] = useState(reward);
+    const [isEditing, setIsEditing] = useState(false);
+
+    const handleSave = () => {
+      onEdit(editedReward);
+      setIsEditing(false);
+    };
+
     return (
       <Box
         sx={{
@@ -874,47 +883,106 @@ function App() {
           zIndex: 100
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{
-            color: '#FF69B4',
-            fontFamily: 'inherit',
-            mb: 2,
-            textAlign: 'center'
-          }}
-        >
-          Next Reward 🎁
-        </Typography>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2,
-            mb: 2
-          }}
-        >
-          <EmojiEvents sx={{ color: '#FFD700', fontSize: 40 }} />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography
-            variant="h5"
+            variant="h6"
             sx={{
-              color: '#666',
-              fontFamily: 'inherit'
+              color: '#FF69B4',
+              fontFamily: 'inherit',
+              textAlign: 'center'
             }}
           >
-            {reward.reward}
+            Next Reward 🎁
           </Typography>
+          <IconButton 
+            onClick={() => {
+              if (isEditing) {
+                handleSave();
+              } else {
+                setIsEditing(true);
+              }
+            }}
+            sx={{ 
+              color: isEditing ? '#4CAF50' : '#FF69B4',
+              '&:hover': {
+                backgroundColor: isEditing ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 105, 180, 0.1)'
+              }
+            }}
+          >
+            {isEditing ? <Check /> : <Edit />}
+          </IconButton>
         </Box>
-        <Typography
-          sx={{
-            color: '#666',
-            fontFamily: 'inherit',
-            textAlign: 'center',
-            mb: 2
-          }}
-        >
-          {reward.description}
-        </Typography>
+        
+        <Box sx={{ mb: 2 }}>
+          {isEditing ? (
+            <TextField
+              fullWidth
+              value={editedReward.reward}
+              onChange={(e) => setEditedReward(prev => ({ ...prev, reward: e.target.value }))}
+              placeholder="Enter reward title"
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '10px',
+                  fontFamily: 'inherit',
+                  backgroundColor: 'rgba(255,255,255,0.8)'
+                }
+              }}
+            />
+          ) : (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 2
+              }}
+            >
+              <EmojiEvents sx={{ color: '#FFD700', fontSize: 40 }} />
+              <Typography
+                variant="h5"
+                sx={{
+                  color: '#666',
+                  fontFamily: 'inherit'
+                }}
+              >
+                {reward.reward}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+
+        {isEditing ? (
+          <TextField
+            fullWidth
+            multiline
+            rows={2}
+            value={editedReward.description}
+            onChange={(e) => setEditedReward(prev => ({ ...prev, description: e.target.value }))}
+            placeholder="Enter reward description"
+            size="small"
+            sx={{
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '10px',
+                fontFamily: 'inherit',
+                backgroundColor: 'rgba(255,255,255,0.8)'
+              }
+            }}
+          />
+        ) : (
+          <Typography
+            sx={{
+              color: '#666',
+              fontFamily: 'inherit',
+              textAlign: 'center',
+              mb: 2
+            }}
+          >
+            {reward.description}
+          </Typography>
+        )}
+
         <Typography
           variant="h6"
           sx={{
@@ -1006,7 +1074,11 @@ function App() {
         `}
       </style>
 
-      <RewardPreview points={points} reward={rewardPreview} />
+      <RewardPreview 
+        points={points} 
+        reward={rewardPreview} 
+        onEdit={(newReward) => setRewardPreview(newReward)}
+      />
 
       {showNewStar && (
         <motion.div
