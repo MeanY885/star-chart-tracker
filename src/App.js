@@ -10,9 +10,13 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Tooltip
+  Tooltip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
-import { Star, AddCircle, RemoveCircle, Edit, EmojiEvents, Refresh, AutoAwesome } from '@mui/icons-material';
+import { Star, AddCircle, RemoveCircle, Edit, EmojiEvents, Refresh, AutoAwesome, Favorite, Cake, School, SportsScore, CleaningServices, LocalLibrary, Mood, FamilyRestroom, Pets } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback } from "react";
 import Particles from "react-tsparticles";
@@ -39,13 +43,17 @@ function App() {
   const [showNewStar, setShowNewStar] = useState(false);
   const [newStarPosition, setNewStarPosition] = useState({ x: 0, y: 0 });
   const [targetPosition, setTargetPosition] = useState({ x: 0, y: 0 });
-  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
   const [currentStarIndex, setCurrentStarIndex] = useState(null);
-  const [currentComment, setCurrentComment] = useState('');
   const [removingStar, setRemovingStar] = useState(false);
   const [removeStarPosition, setRemoveStarPosition] = useState({ x: 0, y: 0 });
   const [isAmazingAnimation, setIsAmazingAnimation] = useState(false);
   const [recentAnimations, setRecentAnimations] = useState([]);
+  const [rewardPreview, setRewardPreview] = useState({
+    stars: 15,
+    reward: "Special Day Out! 🎉",
+    description: "Choose any fun activity for a special family day!"
+  });
+  const [stickerType, setStickerType] = useState({});
 
   const particlesInit = useCallback(async engine => {
     await loadSlim(engine);
@@ -167,24 +175,6 @@ function App() {
   const handleClaimPrize = () => {
     setShowCelebration(false);
     handleReset();
-  };
-
-  const handleCommentSave = () => {
-    if (currentStarIndex !== null) {
-      setStarComments(prev => ({
-        ...prev,
-        [currentStarIndex]: currentComment
-      }));
-      setCommentDialogOpen(false);
-      setCurrentComment('');
-      setCurrentStarIndex(null);
-    }
-  };
-
-  const handleEditComment = (index) => {
-    setCurrentStarIndex(index);
-    setCurrentComment(starComments[index] || '');
-    setCommentDialogOpen(true);
   };
 
   const handleAmazingAchievement = () => {
@@ -851,6 +841,101 @@ function App() {
     };
   };
 
+  // Add sticker options
+  const stickerOptions = [
+    { icon: Star, label: 'Star', color: '#FFD700' },
+    { icon: Favorite, label: 'Love', color: '#FF69B4' },
+    { icon: Cake, label: 'Treat', color: '#FF8C00' },
+    { icon: School, label: 'Learning', color: '#4CAF50' },
+    { icon: SportsScore, label: 'Sports', color: '#2196F3' },
+    { icon: CleaningServices, label: 'Helping', color: '#9C27B0' },
+    { icon: LocalLibrary, label: 'Reading', color: '#795548' },
+    { icon: Mood, label: 'Good Mood', color: '#FFC107' },
+    { icon: FamilyRestroom, label: 'Family', color: '#E91E63' },
+    { icon: Pets, label: 'Pets', color: '#607D8B' }
+  ];
+
+  // Add this new component for the reward preview
+  const RewardPreview = ({ points, reward }) => {
+    const starsToGo = reward.stars - points;
+    return (
+      <Box
+        sx={{
+          position: 'fixed',
+          left: 20,
+          top: 20,
+          width: 300,
+          background: 'rgba(255,255,255,0.9)',
+          borderRadius: 4,
+          p: 3,
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+          border: '2px solid #FFD700',
+          zIndex: 100
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            color: '#FF69B4',
+            fontFamily: 'inherit',
+            mb: 2,
+            textAlign: 'center'
+          }}
+        >
+          Next Reward 🎁
+        </Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+            mb: 2
+          }}
+        >
+          <EmojiEvents sx={{ color: '#FFD700', fontSize: 40 }} />
+          <Typography
+            variant="h5"
+            sx={{
+              color: '#666',
+              fontFamily: 'inherit'
+            }}
+          >
+            {reward.reward}
+          </Typography>
+        </Box>
+        <Typography
+          sx={{
+            color: '#666',
+            fontFamily: 'inherit',
+            textAlign: 'center',
+            mb: 2
+          }}
+        >
+          {reward.description}
+        </Typography>
+        <Typography
+          variant="h6"
+          sx={{
+            color: starsToGo > 0 ? '#FF69B4' : '#4CAF50',
+            fontFamily: 'inherit',
+            textAlign: 'center',
+            animation: starsToGo === 0 ? 'pulse 2s infinite' : 'none',
+            '@keyframes pulse': {
+              '0%, 100%': { transform: 'scale(1)' },
+              '50%': { transform: 'scale(1.05)' }
+            }
+          }}
+        >
+          {starsToGo > 0 
+            ? `Only ${starsToGo} more ${starsToGo === 1 ? 'star' : 'stars'} to go!`
+            : "You've earned your reward! 🎉"}
+        </Typography>
+      </Box>
+    );
+  };
+
   return (
     <Container 
       maxWidth={false} 
@@ -921,46 +1006,7 @@ function App() {
         `}
       </style>
 
-      {/* Add Comments Section */}
-      <Box className="comments-section">
-        <Typography 
-          variant="h6" 
-          sx={{ 
-            mb: 2, 
-            color: '#FF69B4',
-            fontFamily: 'inherit',
-            borderBottom: '2px solid #FFE5F1',
-            pb: 1
-          }}
-        >
-          Millie's Achievements 🌟
-        </Typography>
-        {Object.entries(starComments)
-          .sort(([indexA], [indexB]) => Number(indexB) - Number(indexA))
-          .map(([index, comment]) => (
-            <Box key={index} className="comment-item">
-              <Typography 
-                variant="subtitle2" 
-                sx={{ 
-                  color: '#FF69B4',
-                  fontFamily: 'inherit',
-                  mb: 0.5
-                }}
-              >
-                Star #{Number(index) + 1}
-              </Typography>
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: '#666',
-                  fontFamily: 'inherit'
-                }}
-              >
-                {comment}
-              </Typography>
-            </Box>
-          ))}
-      </Box>
+      <RewardPreview points={points} reward={rewardPreview} />
 
       {showNewStar && (
         <motion.div
@@ -978,7 +1024,6 @@ function App() {
             setShowNewStar(false);
             setPoints(prev => Math.min(prev + 1, 15));
             setCurrentStarIndex(points);
-            setCommentDialogOpen(true);
           }}
         >
           <svg width="0" height="0">
@@ -1196,19 +1241,18 @@ function App() {
           >
             <AnimatePresence>
               {[...Array(15)].map((_, index) => (
-                <Tooltip 
+                <Box 
                   key={index}
-                  title={index < points ? (starComments[index] || 'Click to remove') : (index === points ? 'Click to add' : 'Not earned yet')}
-                  placement="top"
-                  arrow
+                  sx={{ 
+                    position: 'relative',
+                    cursor: index <= points ? 'pointer' : 'default',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
                 >
-                  <Box 
-                    sx={{ 
-                      position: 'relative',
-                      cursor: index <= points ? 'pointer' : 'default'
-                    }}
-                    onClick={() => handleStarClick(index)}
-                  >
+                  <Box onClick={() => handleStarClick(index)}>
                     <motion.div
                       custom={index}
                       variants={starVariants}
@@ -1219,40 +1263,92 @@ function App() {
                       data-star-index={index}
                       className="star-icon"
                     >
-                      <Star 
-                        sx={{ 
-                          fontSize: { xs: 60, sm: 80, md: 100 },
-                          color: index < points ? '#FFD700' : 'rgba(0,0,0,0.1)',
-                          filter: index < points ? 'drop-shadow(0 0 10px rgba(255,215,0,0.5))' : 'none',
-                          transition: 'all 0.3s ease'
-                        }} 
-                      />
+                      {index < points && (
+                        <Box sx={{ position: 'relative' }}>
+                          {React.createElement(
+                            stickerOptions[stickerType[index] || 0].icon,
+                            { 
+                              sx: { 
+                                fontSize: { xs: 60, sm: 80, md: 100 },
+                                color: stickerOptions[stickerType[index] || 0].color,
+                                filter: `drop-shadow(0 0 10px ${stickerOptions[stickerType[index] || 0].color}80)`,
+                                transition: 'all 0.3s ease'
+                              }
+                            }
+                          )}
+                        </Box>
+                      )}
+                      {index >= points && (
+                        <Star 
+                          sx={{ 
+                            fontSize: { xs: 60, sm: 80, md: 100 },
+                            color: 'rgba(0,0,0,0.1)',
+                            transition: 'all 0.3s ease'
+                          }} 
+                        />
+                      )}
                     </motion.div>
-                    {index < points && (
-                      <IconButton
+                  </Box>
+                  {index < points && (
+                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <FormControl size="small" sx={{ width: '100%' }}>
+                        <Select
+                          value={stickerType[index] || 0}
+                          onChange={(e) => {
+                            setStickerType(prev => ({
+                              ...prev,
+                              [index]: e.target.value
+                            }));
+                          }}
+                          sx={{
+                            borderRadius: '10px',
+                            backgroundColor: 'rgba(255,255,255,0.8)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255,255,255,0.9)'
+                            }
+                          }}
+                        >
+                          {stickerOptions.map((option, i) => (
+                            <MenuItem key={i} value={i}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                {React.createElement(option.icon, { sx: { color: option.color } })}
+                                <Typography sx={{ fontFamily: 'inherit' }}>{option.label}</Typography>
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <TextField
                         size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditComment(index);
+                        value={starComments[index] || ''}
+                        onChange={(e) => {
+                          setStarComments(prev => ({
+                            ...prev,
+                            [index]: e.target.value
+                          }));
                         }}
+                        placeholder="Add comment..."
+                        multiline
+                        maxRows={2}
                         sx={{
-                          position: 'absolute',
-                          bottom: -8,
-                          right: -8,
-                          backgroundColor: '#FF69B4',
-                          color: '#FFF',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                          '&:hover': { 
-                            backgroundColor: '#FF1493',
-                            transform: 'scale(1.1)'
+                          width: '100%',
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '10px',
+                            backgroundColor: 'rgba(255,255,255,0.8)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255,255,255,0.9)'
+                            }
+                          },
+                          '& .MuiOutlinedInput-input': {
+                            padding: '8px',
+                            fontSize: '0.875rem',
+                            fontFamily: 'inherit'
                           }
                         }}
-                      >
-                        <Edit sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    )}
-                  </Box>
-                </Tooltip>
+                      />
+                    </Box>
+                  )}
+                </Box>
               ))}
             </AnimatePresence>
           </Box>
@@ -1348,83 +1444,6 @@ function App() {
                   Claim Your Prize! 🎁
                 </Button>
               </motion.div>
-            </DialogActions>
-          </Dialog>
-
-          <Dialog 
-            open={commentDialogOpen} 
-            onClose={() => setCommentDialogOpen(false)}
-            maxWidth="sm"
-            fullWidth
-            PaperProps={{
-              sx: {
-                borderRadius: '20px',
-                background: 'linear-gradient(135deg, #FFE5F1 0%, #FFF6E6 100%)',
-                padding: 2
-              }
-            }}
-          >
-            <DialogTitle>
-              <Typography 
-                variant="h5" 
-                sx={{ 
-                  textAlign: 'center',
-                  color: '#FF69B4',
-                  fontFamily: 'inherit'
-                }}
-              >
-                Why did Millie earn this star? ⭐
-              </Typography>
-            </DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                margin="dense"
-                label="What amazing thing did Millie do?"
-                type="text"
-                fullWidth
-                multiline
-                rows={3}
-                value={currentComment}
-                onChange={(e) => setCurrentComment(e.target.value)}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: '15px',
-                    fontFamily: 'inherit'
-                  },
-                  '& .MuiInputLabel-root': {
-                    fontFamily: 'inherit'
-                  }
-                }}
-              />
-            </DialogContent>
-            <DialogActions sx={{ justifyContent: 'center', pb: 3, gap: 2 }}>
-              <Button 
-                onClick={() => setCommentDialogOpen(false)}
-                sx={{ 
-                  fontFamily: 'inherit',
-                  textTransform: 'none',
-                  color: '#666'
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleCommentSave}
-                variant="contained"
-                sx={{ 
-                  background: 'linear-gradient(45deg, #FF69B4, #FFA500)',
-                  borderRadius: '25px',
-                  px: 4,
-                  fontFamily: 'inherit',
-                  textTransform: 'none',
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #FFA500, #FF69B4)'
-                  }
-                }}
-              >
-                Save Comment
-              </Button>
             </DialogActions>
           </Dialog>
 
