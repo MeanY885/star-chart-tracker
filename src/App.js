@@ -45,6 +45,7 @@ function App() {
   const [removingStar, setRemovingStar] = useState(false);
   const [removeStarPosition, setRemoveStarPosition] = useState({ x: 0, y: 0 });
   const [isAmazingAnimation, setIsAmazingAnimation] = useState(false);
+  const [recentAnimations, setRecentAnimations] = useState([]);
 
   const particlesInit = useCallback(async engine => {
     await loadSlim(engine);
@@ -217,7 +218,7 @@ function App() {
       setTimeout(() => {
         setPoints(newPoints);
         setIsAmazingAnimation(false);
-      }, starsToAdd * 1000 + 8000);
+      }, starsToAdd * 1000 + 5000);
     }
   };
 
@@ -439,7 +440,7 @@ function App() {
         }),
         rotate: 1440,
         scale: [5, 3, 4, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 2. Heart Pattern
       {
@@ -454,7 +455,7 @@ function App() {
         }),
         rotate: [0, 360, 720, 1080],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 3. Infinity Loop
       {
@@ -467,7 +468,7 @@ function App() {
         }),
         rotate: [0, 720],
         scale: [3, 4, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 4. Pinball
       {
@@ -477,7 +478,7 @@ function App() {
         })),
         rotate: [-360, 720, -180, 360],
         scale: [5, 2, 4, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 5. Rainbow Arc
       {
@@ -490,7 +491,7 @@ function App() {
         }),
         rotate: [0, 180, 360],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 6. Starburst
       {
@@ -503,7 +504,7 @@ function App() {
         }),
         rotate: [0, 1080],
         scale: [5, 3, 4, 1],
-        duration: 8
+        duration: 5
       },
       // 7. Snake
       {
@@ -513,7 +514,7 @@ function App() {
         })),
         rotate: [0, 360, 720],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 8. Ferris Wheel
       {
@@ -526,7 +527,7 @@ function App() {
         }),
         rotate: [0, 360],
         scale: [3, 4, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 9. Pendulum
       {
@@ -539,7 +540,7 @@ function App() {
         }),
         rotate: [-45, 45, -45],
         scale: [4, 3, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 10. Firework Burst
       {
@@ -556,7 +557,7 @@ function App() {
         ],
         rotate: [0, 720],
         scale: [3, 5, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 11. Diamond Pattern
       {
@@ -569,7 +570,7 @@ function App() {
         ],
         rotate: [0, 360, 720],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 12. Tornado Spiral
       {
@@ -583,7 +584,7 @@ function App() {
         }),
         rotate: [0, 1440],
         scale: [5, 3, 4, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 13. Bouncing Ball
       {
@@ -593,7 +594,7 @@ function App() {
         })),
         rotate: [0, 360],
         scale: [3, 2, 4, 1],
-        duration: 8
+        duration: 5
       },
       // 14. Figure Eight
       {
@@ -606,7 +607,7 @@ function App() {
         }),
         rotate: [0, 720],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 15. Zigzag Bounce
       {
@@ -616,7 +617,7 @@ function App() {
         })),
         rotate: [-360, 0, 360],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 16. Orbital Path
       {
@@ -629,7 +630,7 @@ function App() {
         }),
         rotate: [0, 1080],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 17. Wave Pattern
       {
@@ -639,7 +640,7 @@ function App() {
         })),
         rotate: [0, 360, 720],
         scale: [3, 4, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 18. Confetti Explosion
       {
@@ -653,7 +654,7 @@ function App() {
         }),
         rotate: [-720, 720],
         scale: [5, 2, 4, 1],
-        duration: 8
+        duration: 5
       },
       // 19. Elastic Bounce
       {
@@ -663,7 +664,7 @@ function App() {
         })),
         rotate: [0, 360],
         scale: [4, 1.5, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 20. Spiral Galaxy
       {
@@ -677,7 +678,7 @@ function App() {
         }),
         rotate: [0, 1440],
         scale: [5, 3, 4, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 21. Butterfly Pattern
       {
@@ -690,7 +691,7 @@ function App() {
         }),
         rotate: [0, 720],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 22. Rubber Band
       {
@@ -704,7 +705,7 @@ function App() {
         }),
         rotate: [-360, 0, 360],
         scale: [3, 4, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 23. Meteor Shower
       {
@@ -714,7 +715,7 @@ function App() {
         })),
         rotate: [0, 900],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 24. DNA Helix
       {
@@ -727,7 +728,7 @@ function App() {
         }),
         rotate: [0, 1080],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 25. Quantum Jump
       {
@@ -740,7 +741,7 @@ function App() {
         }),
         rotate: [-720, 720],
         scale: [5, 1, 4, 2, 1],
-        duration: 8
+        duration: 5
       },
       // 26. Roller Coaster
       {
@@ -753,7 +754,7 @@ function App() {
         }),
         rotate: [0, 1440],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 27. Shooting Star
       {
@@ -765,7 +766,7 @@ function App() {
         ],
         rotate: [0, 360],
         scale: [5, 3, 4, 1],
-        duration: 8
+        duration: 5
       },
       // 28. Vortex
       {
@@ -779,7 +780,7 @@ function App() {
         }),
         rotate: [0, 1800],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 29. Spring Motion
       {
@@ -789,7 +790,7 @@ function App() {
         })),
         rotate: [0, 720],
         scale: [4, 2, 3, 1],
-        duration: 8
+        duration: 5
       },
       // 30. Kaleidoscope
       {
@@ -803,18 +804,51 @@ function App() {
         }),
         rotate: [-540, 0, 540],
         scale: [5, 2, 4, 1],
-        duration: 8
+        duration: 5
       }
     ];
 
-    // Ensure we get a different animation each time
-    const lastAnimation = window.lastAnimationIndex;
-    let newIndex;
-    do {
-      newIndex = Math.floor(Math.random() * animations.length);
-    } while (newIndex === lastAnimation);
-    window.lastAnimationIndex = newIndex;
-    return animations[newIndex];
+    // Keep track of the last 10 animations to avoid repetition
+    const maxHistoryLength = 10;
+    
+    // Filter out recently used animations
+    const availableAnimations = animations.filter((_, index) => !recentAnimations.includes(index));
+    
+    // If we've somehow used all animations, reset the history
+    if (availableAnimations.length === 0) {
+      setRecentAnimations([]);
+      return animations[Math.floor(Math.random() * animations.length)];
+    }
+    
+    // Select a random animation from the available ones
+    const availableIndices = animations.map((_, index) => index)
+      .filter(index => !recentAnimations.includes(index));
+    const selectedIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    
+    // Update the history
+    setRecentAnimations(prev => {
+      const newHistory = [selectedIndex, ...prev];
+      if (newHistory.length > maxHistoryLength) {
+        return newHistory.slice(0, maxHistoryLength);
+      }
+      return newHistory;
+    });
+    
+    // Return the selected animation
+    return {
+      ...animations[selectedIndex],
+      // Add some random variation to make each instance unique
+      path: animations[selectedIndex].path.map(point => ({
+        x: point.x + (Math.random() - 0.5) * 50, // Add slight position variation
+        y: point.y + (Math.random() - 0.5) * 50
+      })),
+      rotate: Array.isArray(animations[selectedIndex].rotate) 
+        ? animations[selectedIndex].rotate.map(r => r + (Math.random() - 0.5) * 45) // Add rotation variation
+        : animations[selectedIndex].rotate + (Math.random() - 0.5) * 45,
+      scale: Array.isArray(animations[selectedIndex].scale)
+        ? animations[selectedIndex].scale.map(s => s * (0.8 + Math.random() * 0.4)) // Add scale variation
+        : animations[selectedIndex].scale * (0.8 + Math.random() * 0.4)
+    };
   };
 
   return (
@@ -862,8 +896,71 @@ function App() {
           .add-button {
             animation: bounce 2s ease-in-out infinite;
           }
+          .comments-section {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+            backdrop-filter: blur(10px);
+          }
+          .comment-item {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid #FF69B4;
+          }
         `}
       </style>
+
+      {/* Add Comments Section */}
+      <Box className="comments-section">
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            mb: 2, 
+            color: '#FF69B4',
+            fontFamily: 'inherit',
+            borderBottom: '2px solid #FFE5F1',
+            pb: 1
+          }}
+        >
+          Millie's Achievements 🌟
+        </Typography>
+        {Object.entries(starComments)
+          .sort(([indexA], [indexB]) => Number(indexB) - Number(indexA))
+          .map(([index, comment]) => (
+            <Box key={index} className="comment-item">
+              <Typography 
+                variant="subtitle2" 
+                sx={{ 
+                  color: '#FF69B4',
+                  fontFamily: 'inherit',
+                  mb: 0.5
+                }}
+              >
+                Star #{Number(index) + 1}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#666',
+                  fontFamily: 'inherit'
+                }}
+              >
+                {comment}
+              </Typography>
+            </Box>
+          ))}
+      </Box>
 
       {showNewStar && (
         <motion.div
