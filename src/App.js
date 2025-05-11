@@ -42,6 +42,8 @@ function App() {
   const [commentDialogOpen, setCommentDialogOpen] = useState(false);
   const [currentStarIndex, setCurrentStarIndex] = useState(null);
   const [currentComment, setCurrentComment] = useState('');
+  const [removingStar, setRemovingStar] = useState(false);
+  const [removeStarPosition, setRemoveStarPosition] = useState({ x: 0, y: 0 });
 
   const particlesInit = useCallback(async engine => {
     await loadSlim(engine);
@@ -89,396 +91,36 @@ function App() {
     }
   }, [points, starComments]);
 
-  const generateRandomAnimation = () => {
-    const animations = [
-      // 1. Spiral Animation
-      {
-        path: Array.from({ length: 20 }, (_, i) => {
-          const angle = (i / 20) * Math.PI * 4;
-          const radius = (1 - i / 20) * Math.min(window.innerWidth, window.innerHeight) / 2;
-          return {
-            x: window.innerWidth / 2 + radius * Math.cos(angle),
-            y: window.innerHeight / 2 + radius * Math.sin(angle)
-          };
-        }),
-        rotate: 1440,
-        scale: [5, 3, 4, 2, 1],
-        duration: 2
-      },
-      // 2. Heart Pattern
-      {
-        path: Array.from({ length: 20 }, (_, i) => {
-          const t = (i / 20) * 2 * Math.PI;
-          const x = 16 * Math.pow(Math.sin(t), 3);
-          const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-          return {
-            x: window.innerWidth/2 + x * 20,
-            y: window.innerHeight/2 - y * 20
-          };
-        }),
-        rotate: [0, 360, 720, 1080],
-        scale: [4, 2, 3, 1],
-        duration: 2.5
-      },
-      // 3. Infinity Loop
-      {
-        path: Array.from({ length: 24 }, (_, i) => {
-          const t = (i / 24) * 2 * Math.PI;
-          return {
-            x: window.innerWidth/2 + 200 * Math.sin(t) / (1 + Math.pow(Math.cos(t), 2)),
-            y: window.innerHeight/2 + 200 * Math.sin(t) * Math.cos(t) / (1 + Math.pow(Math.cos(t), 2))
-          };
-        }),
-        rotate: [0, 720],
-        scale: [3, 4, 2, 1],
-        duration: 2.8
-      },
-      // 4. Pinball
-      {
-        path: Array.from({ length: 10 }, () => ({
-          x: Math.random() * window.innerWidth,
-          y: Math.random() * window.innerHeight
-        })),
-        rotate: [-360, 720, -180, 360],
-        scale: [5, 2, 4, 3, 1],
-        duration: 2.2
-      },
-      // 5. Rainbow Arc
-      {
-        path: Array.from({ length: 15 }, (_, i) => {
-          const progress = i / 14;
-          return {
-            x: window.innerWidth * progress,
-            y: window.innerHeight/2 - Math.sin(progress * Math.PI) * 300
-          };
-        }),
-        rotate: [0, 180, 360],
-        scale: [4, 2, 3, 1],
-        duration: 2.4
-      },
-      // 6. Starburst
-      {
-        path: Array.from({ length: 8 }, (_, i) => {
-          const angle = (i / 8) * 2 * Math.PI;
-          return {
-            x: window.innerWidth/2 + Math.cos(angle) * 400,
-            y: window.innerHeight/2 + Math.sin(angle) * 400
-          };
-        }),
-        rotate: [0, 1080],
-        scale: [5, 3, 4, 1],
-        duration: 2.6
-      },
-      // 7. Snake
-      {
-        path: Array.from({ length: 20 }, (_, i) => ({
-          x: (window.innerWidth/20) * i,
-          y: window.innerHeight/2 + Math.sin(i/2) * 200
-        })),
-        rotate: [0, 360, 720],
-        scale: [4, 2, 3, 1],
-        duration: 2.3
-      },
-      // 8. Ferris Wheel
-      {
-        path: Array.from({ length: 16 }, (_, i) => {
-          const angle = (i / 16) * 2 * Math.PI;
-          return {
-            x: window.innerWidth/2 + Math.cos(angle) * 300,
-            y: window.innerHeight/2 + Math.sin(angle) * 300
-          };
-        }),
-        rotate: [0, 360],
-        scale: [3, 4, 2, 1],
-        duration: 2.7
-      },
-      // 9. Pendulum
-      {
-        path: Array.from({ length: 12 }, (_, i) => {
-          const t = (i / 11) * Math.PI;
-          return {
-            x: window.innerWidth/2 + Math.sin(t) * 400,
-            y: window.innerHeight/2 + Math.cos(t) * 200
-          };
-        }),
-        rotate: [-45, 45, -45],
-        scale: [4, 3, 2, 1],
-        duration: 2.5
-      },
-      // 10. Firework Burst
-      {
-        path: [
-          { x: window.innerWidth/2, y: window.innerHeight },
-          { x: window.innerWidth/2, y: window.innerHeight/2 },
-          ...Array.from({ length: 8 }, (_, i) => {
-            const angle = (i / 8) * 2 * Math.PI;
-            return {
-              x: window.innerWidth/2 + Math.cos(angle) * 300,
-              y: window.innerHeight/2 + Math.sin(angle) * 300
-            };
-          })
-        ],
-        rotate: [0, 720],
-        scale: [3, 5, 2, 1],
-        duration: 2.8
-      },
-      // 11. Diamond Pattern
-      {
-        path: [
-          { x: window.innerWidth/2, y: 0 },
-          { x: window.innerWidth, y: window.innerHeight/2 },
-          { x: window.innerWidth/2, y: window.innerHeight },
-          { x: 0, y: window.innerHeight/2 },
-          { x: window.innerWidth/2, y: 0 }
-        ],
-        rotate: [0, 360, 720],
-        scale: [4, 2, 3, 1],
-        duration: 2.4
-      },
-      // 12. Tornado Spiral
-      {
-        path: Array.from({ length: 20 }, (_, i) => {
-          const angle = (i / 20) * Math.PI * 6;
-          const radius = (1 - i/20) * 300;
-          return {
-            x: window.innerWidth/2 + Math.cos(angle) * radius,
-            y: (window.innerHeight/20) * i
-          };
-        }),
-        rotate: [0, 1440],
-        scale: [5, 3, 4, 2, 1],
-        duration: 2.6
-      },
-      // 13. Bouncing Ball
-      {
-        path: Array.from({ length: 10 }, (_, i) => ({
-          x: (window.innerWidth/10) * i,
-          y: window.innerHeight - Math.abs(Math.sin(i/2 * Math.PI)) * window.innerHeight * 0.8
-        })),
-        rotate: [0, 360],
-        scale: [3, 2, 4, 1],
-        duration: 2.2
-      },
-      // 14. Figure Eight
-      {
-        path: Array.from({ length: 24 }, (_, i) => {
-          const t = (i / 24) * 2 * Math.PI;
-          return {
-            x: window.innerWidth/2 + Math.sin(t) * 300,
-            y: window.innerHeight/2 + Math.sin(t * 2) * 150
-          };
-        }),
-        rotate: [0, 720],
-        scale: [4, 2, 3, 1],
-        duration: 2.7
-      },
-      // 15. Zigzag Bounce
-      {
-        path: Array.from({ length: 12 }, (_, i) => ({
-          x: (window.innerWidth/12) * i,
-          y: window.innerHeight/2 + (i % 2 === 0 ? -200 : 200)
-        })),
-        rotate: [-360, 0, 360],
-        scale: [4, 2, 3, 1],
-        duration: 2.3
-      },
-      // 16. Orbital Path
-      {
-        path: Array.from({ length: 30 }, (_, i) => {
-          const t = (i / 30) * 2 * Math.PI;
-          return {
-            x: window.innerWidth/2 + Math.cos(t) * 200 + Math.cos(t * 3) * 100,
-            y: window.innerHeight/2 + Math.sin(t) * 200 + Math.sin(t * 3) * 100
-          };
-        }),
-        rotate: [0, 1080],
-        scale: [4, 2, 3, 1],
-        duration: 2.8
-      },
-      // 17. Wave Pattern
-      {
-        path: Array.from({ length: 20 }, (_, i) => ({
-          x: (window.innerWidth/20) * i,
-          y: window.innerHeight/2 + Math.sin(i/3) * 100 + Math.cos(i/2) * 100
-        })),
-        rotate: [0, 360, 720],
-        scale: [3, 4, 2, 1],
-        duration: 2.5
-      },
-      // 18. Confetti Explosion
-      {
-        path: Array.from({ length: 12 }, (_, i) => {
-          const angle = (i / 12) * 2 * Math.PI;
-          const radius = Math.random() * 300 + 100;
-          return {
-            x: window.innerWidth/2 + Math.cos(angle) * radius,
-            y: window.innerHeight/2 + Math.sin(angle) * radius
-          };
-        }),
-        rotate: [-720, 720],
-        scale: [5, 2, 4, 1],
-        duration: 2.4
-      },
-      // 19. Elastic Bounce
-      {
-        path: Array.from({ length: 8 }, (_, i) => ({
-          x: window.innerWidth/2 + (i % 2 === 0 ? -200 : 200),
-          y: (window.innerHeight/8) * i
-        })),
-        rotate: [0, 360],
-        scale: [4, 1.5, 3, 1],
-        duration: 2.6
-      },
-      // 20. Spiral Galaxy
-      {
-        path: Array.from({ length: 24 }, (_, i) => {
-          const angle = (i / 24) * Math.PI * 8;
-          const radius = (i / 24) * 300;
-          return {
-            x: window.innerWidth/2 + Math.cos(angle) * radius,
-            y: window.innerHeight/2 + Math.sin(angle) * radius
-          };
-        }),
-        rotate: [0, 1440],
-        scale: [5, 3, 4, 2, 1],
-        duration: 2.7
-      },
-      // 21. Butterfly Pattern
-      {
-        path: Array.from({ length: 30 }, (_, i) => {
-          const t = (i / 30) * 2 * Math.PI;
-          return {
-            x: window.innerWidth/2 + Math.sin(t) * (Math.exp(Math.cos(t)) - 2 * Math.cos(4*t)) * 50,
-            y: window.innerHeight/2 + Math.cos(t) * (Math.exp(Math.cos(t)) - 2 * Math.cos(4*t)) * 50
-          };
-        }),
-        rotate: [0, 720],
-        scale: [4, 2, 3, 1],
-        duration: 2.8
-      },
-      // 22. Rubber Band
-      {
-        path: Array.from({ length: 15 }, (_, i) => {
-          const progress = i / 14;
-          const wobble = Math.sin(progress * Math.PI * 4) * 100;
-          return {
-            x: window.innerWidth * progress,
-            y: window.innerHeight/2 + wobble
-          };
-        }),
-        rotate: [-360, 0, 360],
-        scale: [3, 4, 2, 1],
-        duration: 2.3
-      },
-      // 23. Meteor Shower
-      {
-        path: Array.from({ length: 10 }, (_, i) => ({
-          x: window.innerWidth - (window.innerWidth/10) * i,
-          y: (window.innerHeight/10) * i
-        })),
-        rotate: [0, 900],
-        scale: [4, 2, 3, 1],
-        duration: 2.2
-      },
-      // 24. DNA Helix
-      {
-        path: Array.from({ length: 20 }, (_, i) => {
-          const t = (i / 20) * Math.PI * 4;
-          return {
-            x: window.innerWidth/2 + Math.cos(t) * 200,
-            y: (window.innerHeight/20) * i + Math.sin(t) * 100
-          };
-        }),
-        rotate: [0, 1080],
-        scale: [4, 2, 3, 1],
-        duration: 2.6
-      },
-      // 25. Quantum Jump
-      {
-        path: Array.from({ length: 6 }, (_, i) => {
-          const randomDistance = Math.random() * 400 - 200;
-          return {
-            x: window.innerWidth/2 + randomDistance,
-            y: window.innerHeight/2 + randomDistance
-          };
-        }),
-        rotate: [-720, 720],
-        scale: [5, 1, 4, 2, 1],
-        duration: 2.4
-      },
-      // 26. Roller Coaster
-      {
-        path: Array.from({ length: 24 }, (_, i) => {
-          const t = (i / 24) * Math.PI * 4;
-          return {
-            x: (window.innerWidth/24) * i,
-            y: window.innerHeight/2 + Math.sin(t) * 150 + Math.cos(t * 2) * 100
-          };
-        }),
-        rotate: [0, 1440],
-        scale: [4, 2, 3, 1],
-        duration: 2.7
-      },
-      // 27. Shooting Star
-      {
-        path: [
-          { x: 0, y: 0 },
-          { x: window.innerWidth * 0.3, y: window.innerHeight * 0.3 },
-          { x: window.innerWidth * 0.7, y: window.innerHeight * 0.7 },
-          { x: window.innerWidth, y: window.innerHeight }
-        ],
-        rotate: [0, 360],
-        scale: [5, 3, 4, 1],
-        duration: 2.2
-      },
-      // 28. Vortex
-      {
-        path: Array.from({ length: 20 }, (_, i) => {
-          const angle = (i / 20) * Math.PI * 6;
-          const radius = Math.pow(i / 20, 2) * 400;
-          return {
-            x: window.innerWidth/2 + Math.cos(angle) * radius,
-            y: window.innerHeight/2 + Math.sin(angle) * radius
-          };
-        }),
-        rotate: [0, 1800],
-        scale: [4, 2, 3, 1],
-        duration: 2.8
-      },
-      // 29. Spring Motion
-      {
-        path: Array.from({ length: 16 }, (_, i) => ({
-          x: (window.innerWidth/16) * i,
-          y: window.innerHeight/2 + Math.sin(i * 1.5) * (200 - i * 10)
-        })),
-        rotate: [0, 720],
-        scale: [4, 2, 3, 1],
-        duration: 2.5
-      },
-      // 30. Kaleidoscope
-      {
-        path: Array.from({ length: 12 }, (_, i) => {
-          const angle = (i / 12) * Math.PI * 2;
-          const radius = 200 + Math.sin(i * Math.PI/6) * 100;
-          return {
-            x: window.innerWidth/2 + Math.cos(angle) * radius,
-            y: window.innerHeight/2 + Math.sin(angle) * radius
-          };
-        }),
-        rotate: [-540, 0, 540],
-        scale: [5, 2, 4, 1],
-        duration: 2.6
+  const handleStarClick = (index) => {
+    if (index < points) {
+      // Removing a star
+      const starElement = document.querySelector(`[data-star-index="${index}"]`);
+      if (starElement) {
+        const rect = starElement.getBoundingClientRect();
+        setRemoveStarPosition({ 
+          x: rect.left + rect.width / 2, 
+          y: rect.top + rect.height / 2 
+        });
+        setRemovingStar(true);
+        setTimeout(() => {
+          setPoints(prev => prev - 1);
+          const newComments = { ...starComments };
+          delete newComments[index];
+          // Shift all comments down by one
+          for (let i = index + 1; i < points; i++) {
+            if (newComments[i]) {
+              newComments[i - 1] = newComments[i];
+              delete newComments[i];
+            }
+          }
+          setStarComments(newComments);
+          setRemovingStar(false);
+        }, 2000);
       }
-    ];
-
-    // Ensure we get a different animation each time
-    const lastAnimation = window.lastAnimationIndex;
-    let newIndex;
-    do {
-      newIndex = Math.floor(Math.random() * animations.length);
-    } while (newIndex === lastAnimation);
-    window.lastAnimationIndex = newIndex;
-    return animations[newIndex];
+    } else if (index === points) {
+      // Adding a star
+      handleAddPoint();
+    }
   };
 
   const handleAddPoint = () => {
@@ -672,6 +314,419 @@ function App() {
         }
       };
     }
+  };
+
+  const removeStarVariants = {
+    initial: { 
+      position: 'fixed',
+      scale: 1,
+      x: removeStarPosition.x,
+      y: removeStarPosition.y,
+      rotate: 0,
+      opacity: 1,
+      zIndex: 1000
+    },
+    animate: {
+      scale: [1, 1.5, 0.5, 0],
+      rotate: [0, 180, 360, 720],
+      opacity: [1, 0.8, 0.5, 0],
+      transition: {
+        duration: 2,
+        ease: "easeInOut"
+      }
+    }
+  };
+
+  const generateRandomAnimation = () => {
+    const animations = [
+      // 1. Spiral Animation
+      {
+        path: Array.from({ length: 20 }, (_, i) => {
+          const angle = (i / 20) * Math.PI * 4;
+          const radius = (1 - i / 20) * Math.min(window.innerWidth, window.innerHeight) / 2;
+          return {
+            x: window.innerWidth / 2 + radius * Math.cos(angle),
+            y: window.innerHeight / 2 + radius * Math.sin(angle)
+          };
+        }),
+        rotate: 1440,
+        scale: [5, 3, 4, 2, 1],
+        duration: 8
+      },
+      // 2. Heart Pattern
+      {
+        path: Array.from({ length: 20 }, (_, i) => {
+          const t = (i / 20) * 2 * Math.PI;
+          const x = 16 * Math.pow(Math.sin(t), 3);
+          const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+          return {
+            x: window.innerWidth/2 + x * 20,
+            y: window.innerHeight/2 - y * 20
+          };
+        }),
+        rotate: [0, 360, 720, 1080],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 3. Infinity Loop
+      {
+        path: Array.from({ length: 24 }, (_, i) => {
+          const t = (i / 24) * 2 * Math.PI;
+          return {
+            x: window.innerWidth/2 + 200 * Math.sin(t) / (1 + Math.pow(Math.cos(t), 2)),
+            y: window.innerHeight/2 + 200 * Math.sin(t) * Math.cos(t) / (1 + Math.pow(Math.cos(t), 2))
+          };
+        }),
+        rotate: [0, 720],
+        scale: [3, 4, 2, 1],
+        duration: 8
+      },
+      // 4. Pinball
+      {
+        path: Array.from({ length: 10 }, () => ({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight
+        })),
+        rotate: [-360, 720, -180, 360],
+        scale: [5, 2, 4, 3, 1],
+        duration: 8
+      },
+      // 5. Rainbow Arc
+      {
+        path: Array.from({ length: 15 }, (_, i) => {
+          const progress = i / 14;
+          return {
+            x: window.innerWidth * progress,
+            y: window.innerHeight/2 - Math.sin(progress * Math.PI) * 300
+          };
+        }),
+        rotate: [0, 180, 360],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 6. Starburst
+      {
+        path: Array.from({ length: 8 }, (_, i) => {
+          const angle = (i / 8) * 2 * Math.PI;
+          return {
+            x: window.innerWidth/2 + Math.cos(angle) * 400,
+            y: window.innerHeight/2 + Math.sin(angle) * 400
+          };
+        }),
+        rotate: [0, 1080],
+        scale: [5, 3, 4, 1],
+        duration: 8
+      },
+      // 7. Snake
+      {
+        path: Array.from({ length: 20 }, (_, i) => ({
+          x: (window.innerWidth/20) * i,
+          y: window.innerHeight/2 + Math.sin(i/2) * 200
+        })),
+        rotate: [0, 360, 720],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 8. Ferris Wheel
+      {
+        path: Array.from({ length: 16 }, (_, i) => {
+          const angle = (i / 16) * 2 * Math.PI;
+          return {
+            x: window.innerWidth/2 + Math.cos(angle) * 300,
+            y: window.innerHeight/2 + Math.sin(angle) * 300
+          };
+        }),
+        rotate: [0, 360],
+        scale: [3, 4, 2, 1],
+        duration: 8
+      },
+      // 9. Pendulum
+      {
+        path: Array.from({ length: 12 }, (_, i) => {
+          const t = (i / 11) * Math.PI;
+          return {
+            x: window.innerWidth/2 + Math.sin(t) * 400,
+            y: window.innerHeight/2 + Math.cos(t) * 200
+          };
+        }),
+        rotate: [-45, 45, -45],
+        scale: [4, 3, 2, 1],
+        duration: 8
+      },
+      // 10. Firework Burst
+      {
+        path: [
+          { x: window.innerWidth/2, y: window.innerHeight },
+          { x: window.innerWidth/2, y: window.innerHeight/2 },
+          ...Array.from({ length: 8 }, (_, i) => {
+            const angle = (i / 8) * 2 * Math.PI;
+            return {
+              x: window.innerWidth/2 + Math.cos(angle) * 300,
+              y: window.innerHeight/2 + Math.sin(angle) * 300
+            };
+          })
+        ],
+        rotate: [0, 720],
+        scale: [3, 5, 2, 1],
+        duration: 8
+      },
+      // 11. Diamond Pattern
+      {
+        path: [
+          { x: window.innerWidth/2, y: 0 },
+          { x: window.innerWidth, y: window.innerHeight/2 },
+          { x: window.innerWidth/2, y: window.innerHeight },
+          { x: 0, y: window.innerHeight/2 },
+          { x: window.innerWidth/2, y: 0 }
+        ],
+        rotate: [0, 360, 720],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 12. Tornado Spiral
+      {
+        path: Array.from({ length: 20 }, (_, i) => {
+          const angle = (i / 20) * Math.PI * 6;
+          const radius = (1 - i/20) * 300;
+          return {
+            x: window.innerWidth/2 + Math.cos(angle) * radius,
+            y: (window.innerHeight/20) * i
+          };
+        }),
+        rotate: [0, 1440],
+        scale: [5, 3, 4, 2, 1],
+        duration: 8
+      },
+      // 13. Bouncing Ball
+      {
+        path: Array.from({ length: 10 }, (_, i) => ({
+          x: (window.innerWidth/10) * i,
+          y: window.innerHeight - Math.abs(Math.sin(i/2 * Math.PI)) * window.innerHeight * 0.8
+        })),
+        rotate: [0, 360],
+        scale: [3, 2, 4, 1],
+        duration: 8
+      },
+      // 14. Figure Eight
+      {
+        path: Array.from({ length: 24 }, (_, i) => {
+          const t = (i / 24) * 2 * Math.PI;
+          return {
+            x: window.innerWidth/2 + Math.sin(t) * 300,
+            y: window.innerHeight/2 + Math.sin(t * 2) * 150
+          };
+        }),
+        rotate: [0, 720],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 15. Zigzag Bounce
+      {
+        path: Array.from({ length: 12 }, (_, i) => ({
+          x: (window.innerWidth/12) * i,
+          y: window.innerHeight/2 + (i % 2 === 0 ? -200 : 200)
+        })),
+        rotate: [-360, 0, 360],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 16. Orbital Path
+      {
+        path: Array.from({ length: 30 }, (_, i) => {
+          const t = (i / 30) * 2 * Math.PI;
+          return {
+            x: window.innerWidth/2 + Math.cos(t) * 200 + Math.cos(t * 3) * 100,
+            y: window.innerHeight/2 + Math.sin(t) * 200 + Math.sin(t * 3) * 100
+          };
+        }),
+        rotate: [0, 1080],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 17. Wave Pattern
+      {
+        path: Array.from({ length: 20 }, (_, i) => ({
+          x: (window.innerWidth/20) * i,
+          y: window.innerHeight/2 + Math.sin(i/3) * 100 + Math.cos(i/2) * 100
+        })),
+        rotate: [0, 360, 720],
+        scale: [3, 4, 2, 1],
+        duration: 8
+      },
+      // 18. Confetti Explosion
+      {
+        path: Array.from({ length: 12 }, (_, i) => {
+          const angle = (i / 12) * 2 * Math.PI;
+          const radius = Math.random() * 300 + 100;
+          return {
+            x: window.innerWidth/2 + Math.cos(angle) * radius,
+            y: window.innerHeight/2 + Math.sin(angle) * radius
+          };
+        }),
+        rotate: [-720, 720],
+        scale: [5, 2, 4, 1],
+        duration: 8
+      },
+      // 19. Elastic Bounce
+      {
+        path: Array.from({ length: 8 }, (_, i) => ({
+          x: window.innerWidth/2 + (i % 2 === 0 ? -200 : 200),
+          y: (window.innerHeight/8) * i
+        })),
+        rotate: [0, 360],
+        scale: [4, 1.5, 3, 1],
+        duration: 8
+      },
+      // 20. Spiral Galaxy
+      {
+        path: Array.from({ length: 24 }, (_, i) => {
+          const angle = (i / 24) * Math.PI * 8;
+          const radius = (i / 24) * 300;
+          return {
+            x: window.innerWidth/2 + Math.cos(angle) * radius,
+            y: window.innerHeight/2 + Math.sin(angle) * radius
+          };
+        }),
+        rotate: [0, 1440],
+        scale: [5, 3, 4, 2, 1],
+        duration: 8
+      },
+      // 21. Butterfly Pattern
+      {
+        path: Array.from({ length: 30 }, (_, i) => {
+          const t = (i / 30) * 2 * Math.PI;
+          return {
+            x: window.innerWidth/2 + Math.sin(t) * (Math.exp(Math.cos(t)) - 2 * Math.cos(4*t)) * 50,
+            y: window.innerHeight/2 + Math.cos(t) * (Math.exp(Math.cos(t)) - 2 * Math.cos(4*t)) * 50
+          };
+        }),
+        rotate: [0, 720],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 22. Rubber Band
+      {
+        path: Array.from({ length: 15 }, (_, i) => {
+          const progress = i / 14;
+          const wobble = Math.sin(progress * Math.PI * 4) * 100;
+          return {
+            x: window.innerWidth * progress,
+            y: window.innerHeight/2 + wobble
+          };
+        }),
+        rotate: [-360, 0, 360],
+        scale: [3, 4, 2, 1],
+        duration: 8
+      },
+      // 23. Meteor Shower
+      {
+        path: Array.from({ length: 10 }, (_, i) => ({
+          x: window.innerWidth - (window.innerWidth/10) * i,
+          y: (window.innerHeight/10) * i
+        })),
+        rotate: [0, 900],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 24. DNA Helix
+      {
+        path: Array.from({ length: 20 }, (_, i) => {
+          const t = (i / 20) * Math.PI * 4;
+          return {
+            x: window.innerWidth/2 + Math.cos(t) * 200,
+            y: (window.innerHeight/20) * i + Math.sin(t) * 100
+          };
+        }),
+        rotate: [0, 1080],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 25. Quantum Jump
+      {
+        path: Array.from({ length: 6 }, (_, i) => {
+          const randomDistance = Math.random() * 400 - 200;
+          return {
+            x: window.innerWidth/2 + randomDistance,
+            y: window.innerHeight/2 + randomDistance
+          };
+        }),
+        rotate: [-720, 720],
+        scale: [5, 1, 4, 2, 1],
+        duration: 8
+      },
+      // 26. Roller Coaster
+      {
+        path: Array.from({ length: 24 }, (_, i) => {
+          const t = (i / 24) * Math.PI * 4;
+          return {
+            x: (window.innerWidth/24) * i,
+            y: window.innerHeight/2 + Math.sin(t) * 150 + Math.cos(t * 2) * 100
+          };
+        }),
+        rotate: [0, 1440],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 27. Shooting Star
+      {
+        path: [
+          { x: 0, y: 0 },
+          { x: window.innerWidth * 0.3, y: window.innerHeight * 0.3 },
+          { x: window.innerWidth * 0.7, y: window.innerHeight * 0.7 },
+          { x: window.innerWidth, y: window.innerHeight }
+        ],
+        rotate: [0, 360],
+        scale: [5, 3, 4, 1],
+        duration: 8
+      },
+      // 28. Vortex
+      {
+        path: Array.from({ length: 20 }, (_, i) => {
+          const angle = (i / 20) * Math.PI * 6;
+          const radius = Math.pow(i / 20, 2) * 400;
+          return {
+            x: window.innerWidth/2 + Math.cos(angle) * radius,
+            y: window.innerHeight/2 + Math.sin(angle) * radius
+          };
+        }),
+        rotate: [0, 1800],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 29. Spring Motion
+      {
+        path: Array.from({ length: 16 }, (_, i) => ({
+          x: (window.innerWidth/16) * i,
+          y: window.innerHeight/2 + Math.sin(i * 1.5) * (200 - i * 10)
+        })),
+        rotate: [0, 720],
+        scale: [4, 2, 3, 1],
+        duration: 8
+      },
+      // 30. Kaleidoscope
+      {
+        path: Array.from({ length: 12 }, (_, i) => {
+          const angle = (i / 12) * Math.PI * 2;
+          const radius = 200 + Math.sin(i * Math.PI/6) * 100;
+          return {
+            x: window.innerWidth/2 + Math.cos(angle) * radius,
+            y: window.innerHeight/2 + Math.sin(angle) * radius
+          };
+        }),
+        rotate: [-540, 0, 540],
+        scale: [5, 2, 4, 1],
+        duration: 8
+      }
+    ];
+
+    // Ensure we get a different animation each time
+    const lastAnimation = window.lastAnimationIndex;
+    let newIndex;
+    do {
+      newIndex = Math.floor(Math.random() * animations.length);
+    } while (newIndex === lastAnimation);
+    window.lastAnimationIndex = newIndex;
+    return animations[newIndex];
   };
 
   return (
@@ -938,11 +993,17 @@ function App() {
               {[...Array(15)].map((_, index) => (
                 <Tooltip 
                   key={index}
-                  title={starComments[index] || 'No comment yet'}
+                  title={index < points ? (starComments[index] || 'Click to remove') : (index === points ? 'Click to add' : 'Not earned yet')}
                   placement="top"
                   arrow
                 >
-                  <Box sx={{ position: 'relative' }}>
+                  <Box 
+                    sx={{ 
+                      position: 'relative',
+                      cursor: index <= points ? 'pointer' : 'default'
+                    }}
+                    onClick={() => handleStarClick(index)}
+                  >
                     <motion.div
                       custom={index}
                       variants={starVariants}
@@ -965,7 +1026,10 @@ function App() {
                     {index < points && (
                       <IconButton
                         size="small"
-                        onClick={() => handleEditComment(index)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditComment(index);
+                        }}
                         sx={{
                           position: 'absolute',
                           bottom: -8,
@@ -1158,6 +1222,28 @@ function App() {
               </Button>
             </DialogActions>
           </Dialog>
+
+          {removingStar && (
+            <motion.div
+              initial="initial"
+              animate="animate"
+              variants={removeStarVariants}
+              style={{ 
+                position: 'fixed', 
+                zIndex: 1000,
+                filter: 'url(#glow)',
+                willChange: 'transform'
+              }}
+            >
+              <Star 
+                sx={{ 
+                  fontSize: { xs: 100, sm: 120, md: 140 },
+                  color: '#ffd700',
+                  filter: 'drop-shadow(0 0 30px rgba(255,215,0,0.8))'
+                }} 
+              />
+            </motion.div>
+          )}
         </Box>
       </motion.div>
     </Container>
