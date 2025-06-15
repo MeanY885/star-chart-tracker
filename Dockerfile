@@ -46,12 +46,12 @@ RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 # Expose port
-EXPOSE 2000
+EXPOSE 1000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "const http = require('http'); \
-               const options = { host: 'localhost', port: 2000, path: '/', timeout: 2000 }; \
+               const options = { host: 'localhost', port: 1000, path: '/', timeout: 2000 }; \
                const req = http.request(options, (res) => { res.statusCode === 200 ? process.exit(0) : process.exit(1); }); \
                req.on('error', () => process.exit(1)); \
                req.end();"

@@ -28,7 +28,7 @@ npm install
 docker-compose up dev
 ```
 
-The app will be available at: http://localhost:2000
+The app will be available at: http://localhost:1000
 
 ### Option 2: Production Mode
 Optimized build with nginx reverse proxy:
@@ -42,8 +42,8 @@ docker-compose up app -d
 ```
 
 **Production URLs:**
-- With nginx: http://localhost:2000
-- Without nginx: http://localhost:2000
+- With nginx: http://localhost:1000
+- Without nginx: http://localhost:1000
 
 ## 📁 Project Structure
 
@@ -148,14 +148,14 @@ docker-compose --profile production up -d
 
 ### Environment Variables:
 ```bash
-# The app runs on port 2000 internally and externally
-# Both container and host use port 2000
+# The app runs on port 1000 internally and externally
+# Both container and host use port 1000
 
 # Set Node environment
 NODE_ENV=production docker-compose up app
 
 # To use a different port, modify docker-compose.yml:
-# ports: - "YOUR_PORT:2000"
+# ports: - "YOUR_PORT:1000"
 ```
 
 ### Volume Mounts:

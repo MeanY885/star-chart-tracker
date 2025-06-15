@@ -33,7 +33,7 @@ app.post('/data/save', async (req, res) => {
 });
 
 // Initialize database and start server
-const PORT = process.env.PORT || 2000;
+const PORT = process.env.PORT || 1000;
 
 async function startServer() {
   try {
