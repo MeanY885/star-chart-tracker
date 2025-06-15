@@ -148,14 +148,14 @@ docker-compose --profile production up -d
 
 ### Environment Variables:
 ```bash
-# The app runs on port 2000 by default
-# Internal container port is 3000, mapped to host port 2000
+# The app runs on port 2000 internally and externally
+# Both container and host use port 2000
 
 # Set Node environment
 NODE_ENV=production docker-compose up app
 
-# To use a different host port, modify docker-compose.yml:
-# ports: - "YOUR_PORT:3000"
+# To use a different port, modify docker-compose.yml:
+# ports: - "YOUR_PORT:2000"
 ```
 
 ### Volume Mounts:
