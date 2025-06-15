@@ -64,10 +64,14 @@ function App() {
   useEffect(() => {
     fetch('/data/star-chart-data.json')
       .then(response => response.json())
-      .catch(() => ({ points: 0, starComments: {} }))
+      .catch(() => ({ points: 0, starComments: {}, stickerTypes: {}, rewardPreview: null }))
       .then(data => {
         setPoints(data.points || 0);
-        setStarComments(data.starComments || {});
+        setStarComments(data.starComments?.comments || {});
+        setStickerType(data.starComments?.stickerTypes || {});
+        if (data.rewardPreview) {
+          setRewardPreview(data.rewardPreview);
+        }
         if (data.points >= 15) {
           setShowCelebration(true);
         }
@@ -75,17 +79,24 @@ function App() {
   }, []);
 
   // Save data to server
-  const saveData = async (newPoints, newComments) => {
+  const saveData = async (newPoints, newComments, newStickerTypes = null, newRewardPreview = null) => {
     try {
+      const payload = {
+        points: newPoints,
+        starComments: newComments,
+        stickerTypes: newStickerTypes || stickerType
+      };
+      
+      if (newRewardPreview) {
+        payload.rewardPreview = newRewardPreview;
+      }
+
       const response = await fetch('/data/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          points: newPoints,
-          starComments: newComments
-        })
+        body: JSON.stringify(payload)
       });
       if (!response.ok) {
         console.error('Failed to save data');
@@ -100,7 +111,7 @@ function App() {
     if (points >= 15) {
       setShowCelebration(true);
     }
-  }, [points, starComments]);
+  }, [points, starComments, stickerType]);
 
   const handleStarClick = (index) => {
     if (index < points) {
@@ -170,7 +181,8 @@ function App() {
   const handleReset = () => {
     setPoints(0);
     setStarComments({});
-    saveData(0, {});
+    setStickerType({});
+    saveData(0, {}, {});
   };
 
   const handleClaimPrize = () => {
@@ -865,22 +877,29 @@ function App() {
     const handleSave = () => {
       onEdit(editedReward);
       setIsEditing(false);
+      // Save reward settings to database
+      saveData(points, starComments, stickerType, editedReward);
     };
 
     return (
       <Box
         sx={{
           position: 'fixed',
-          left: 20,
-          top: 20,
-          width: 300,
+          left: { xs: 10, sm: 20 },
+          top: { xs: 10, sm: 20 },
+          width: { xs: 260, sm: 300, md: 320 },
           background: 'rgba(255,255,255,0.9)',
           borderRadius: 4,
-          p: 3,
+          p: { xs: 2, sm: 3 },
           backdropFilter: 'blur(10px)',
           boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
           border: '2px solid #FFD700',
-          zIndex: 100
+          zIndex: 100,
+          '@media (orientation: landscape) and (max-height: 768px)': {
+            width: 250,
+            p: 2,
+            fontSize: '0.875rem'
+          }
         }}
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -1015,7 +1034,10 @@ function App() {
         margin: 0,
         overflow: 'hidden',
         background: 'linear-gradient(135deg, #FFE5F1 0%, #FFF6E6 50%, #E6F8FF 100%)',
-        fontFamily: '"Comic Sans MS", "Comic Sans", cursive'
+        fontFamily: '"Comic Sans MS", "Comic Sans", cursive',
+        '@media (orientation: landscape) and (max-height: 1024px)': {
+          height: '100vh'
+        }
       }}
     >
       <style>
@@ -1147,8 +1169,12 @@ function App() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'space-evenly',
-            padding: { xs: 2, sm: 4 },
-            position: 'relative'
+            padding: { xs: 1, sm: 2, md: 4 },
+            position: 'relative',
+            '@media (orientation: landscape) and (max-height: 768px)': {
+              justifyContent: 'space-around',
+              padding: 1
+            }
           }}
         >
           {/* Decorative background elements */}
@@ -1187,11 +1213,15 @@ function App() {
               variant="h1" 
               component="h1" 
               sx={{ 
-                fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem' },
+                fontSize: { xs: '2rem', sm: '2.5rem', md: '3.5rem', lg: '4.5rem' },
                 color: '#FF69B4',
                 textShadow: '3px 3px 0px #FFA500, 6px 6px 0px rgba(0,0,0,0.1)',
-                mb: 2,
-                fontFamily: 'inherit'
+                mb: { xs: 1, sm: 2 },
+                fontFamily: 'inherit',
+                '@media (orientation: landscape) and (max-height: 768px)': {
+                  fontSize: '2rem',
+                  mb: 0.5
+                }
               }}
             >
               Millie's Star Chart
@@ -1201,8 +1231,11 @@ function App() {
               sx={{
                 color: '#666',
                 fontFamily: 'inherit',
-                fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem' },
-                fontWeight: 'normal'
+                fontSize: { xs: '1rem', sm: '1.2rem', md: '1.5rem', lg: '1.8rem' },
+                fontWeight: 'normal',
+                '@media (orientation: landscape) and (max-height: 768px)': {
+                  fontSize: '1rem'
+                }
               }}
             >
               Collect stars and earn amazing prizes! 🎁
@@ -1225,13 +1258,25 @@ function App() {
                   fontFamily: 'inherit',
                   color: '#FFF',
                   textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
-                  fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+                  fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem', lg: '3rem' },
+                  '@media (orientation: landscape) and (max-height: 768px)': {
+                    fontSize: '1.5rem'
+                  }
                 }}
               >
                 {points} / 15 Stars
               </Typography>
             </motion.div>
-            <Box sx={{ display: 'flex', gap: 4, justifyContent: 'center', mt: 4 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              gap: { xs: 2, sm: 3, md: 4 }, 
+              justifyContent: 'center', 
+              mt: { xs: 2, sm: 3, md: 4 },
+              '@media (orientation: landscape) and (max-height: 768px)': {
+                gap: 2,
+                mt: 1
+              }
+            }}>
               <motion.div
                 variants={buttonVariants}
                 whileHover="hover"
@@ -1241,15 +1286,28 @@ function App() {
                 <IconButton 
                   onClick={handleAddPoint}
                   sx={{ 
-                    p: { xs: 2, sm: 3 },
+                    p: { xs: 1.5, sm: 2, md: 3 },
                     background: 'linear-gradient(45deg, #4CAF50, #8BC34A)',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    minWidth: { xs: 56, sm: 64 },
+                    minHeight: { xs: 56, sm: 64 },
                     '&:hover': {
                       background: 'linear-gradient(45deg, #8BC34A, #4CAF50)'
+                    },
+                    '@media (orientation: landscape) and (max-height: 768px)': {
+                      p: 1,
+                      minWidth: 48,
+                      minHeight: 48
                     }
                   }}
                 >
-                  <AddCircle sx={{ fontSize: { xs: 40, sm: 50, md: 60 }, color: '#FFF' }} />
+                  <AddCircle sx={{ 
+                    fontSize: { xs: 32, sm: 40, md: 50, lg: 60 }, 
+                    color: '#FFF',
+                    '@media (orientation: landscape) and (max-height: 768px)': {
+                      fontSize: 32
+                    }
+                  }} />
                 </IconButton>
               </motion.div>
 
@@ -1261,15 +1319,28 @@ function App() {
                 <IconButton 
                   onClick={handleAmazingAchievement}
                   sx={{ 
-                    p: { xs: 2, sm: 3 },
+                    p: { xs: 1.5, sm: 2, md: 3 },
                     background: 'linear-gradient(45deg, #FF69B4, #FFD700)',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    minWidth: { xs: 56, sm: 64 },
+                    minHeight: { xs: 56, sm: 64 },
                     '&:hover': {
                       background: 'linear-gradient(45deg, #FFD700, #FF69B4)'
+                    },
+                    '@media (orientation: landscape) and (max-height: 768px)': {
+                      p: 1,
+                      minWidth: 48,
+                      minHeight: 48
                     }
                   }}
                 >
-                  <AutoAwesome sx={{ fontSize: { xs: 40, sm: 50, md: 60 }, color: '#FFF' }} />
+                  <AutoAwesome sx={{ 
+                    fontSize: { xs: 32, sm: 40, md: 50, lg: 60 }, 
+                    color: '#FFF',
+                    '@media (orientation: landscape) and (max-height: 768px)': {
+                      fontSize: 32
+                    }
+                  }} />
                 </IconButton>
               </motion.div>
 
@@ -1281,15 +1352,28 @@ function App() {
                 <IconButton 
                   onClick={handleReset}
                   sx={{ 
-                    p: { xs: 2, sm: 3 },
+                    p: { xs: 1.5, sm: 2, md: 3 },
                     background: 'linear-gradient(45deg, #FF9800, #FF5722)',
                     boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                    minWidth: { xs: 56, sm: 64 },
+                    minHeight: { xs: 56, sm: 64 },
                     '&:hover': {
                       background: 'linear-gradient(45deg, #FF5722, #FF9800)'
+                    },
+                    '@media (orientation: landscape) and (max-height: 768px)': {
+                      p: 1,
+                      minWidth: 48,
+                      minHeight: 48
                     }
                   }}
                 >
-                  <Refresh sx={{ fontSize: { xs: 40, sm: 50, md: 60 }, color: '#FFF' }} />
+                  <Refresh sx={{ 
+                    fontSize: { xs: 32, sm: 40, md: 50, lg: 60 }, 
+                    color: '#FFF',
+                    '@media (orientation: landscape) and (max-height: 768px)': {
+                      fontSize: 32
+                    }
+                  }} />
                 </IconButton>
               </motion.div>
             </Box>
@@ -1299,16 +1383,21 @@ function App() {
             sx={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(5, 1fr)', 
-              gap: { xs: 3, sm: 4, md: 5 },
+              gap: { xs: 2, sm: 3, md: 4, lg: 5 },
               width: '100%',
-              maxWidth: { xs: '90vw', sm: '80vw', md: '70vw' },
+              maxWidth: { xs: '95vw', sm: '90vw', md: '80vw', lg: '70vw' },
               margin: '0 auto',
               position: 'relative',
-              padding: 3,
+              padding: { xs: 2, sm: 2.5, md: 3 },
               background: 'rgba(255,255,255,0.5)',
-              borderRadius: '30px',
+              borderRadius: { xs: '20px', sm: '25px', md: '30px' },
               backdropFilter: 'blur(10px)',
-              boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+              boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+              '@media (orientation: landscape) and (max-height: 768px)': {
+                gap: 1.5,
+                padding: 1.5,
+                maxWidth: '95vw'
+              }
             }}
           >
             <AnimatePresence>
@@ -1341,10 +1430,13 @@ function App() {
                             stickerOptions[stickerType[index] || 0].icon,
                             { 
                               sx: { 
-                                fontSize: { xs: 60, sm: 80, md: 100 },
+                                fontSize: { xs: 40, sm: 60, md: 80, lg: 100 },
                                 color: stickerOptions[stickerType[index] || 0].color,
                                 filter: `drop-shadow(0 0 10px ${stickerOptions[stickerType[index] || 0].color}80)`,
-                                transition: 'all 0.3s ease'
+                                transition: 'all 0.3s ease',
+                                '@media (orientation: landscape) and (max-height: 768px)': {
+                                  fontSize: 40
+                                }
                               }
                             }
                           )}
@@ -1353,9 +1445,12 @@ function App() {
                       {index >= points && (
                         <Star 
                           sx={{ 
-                            fontSize: { xs: 60, sm: 80, md: 100 },
+                            fontSize: { xs: 40, sm: 60, md: 80, lg: 100 },
                             color: 'rgba(0,0,0,0.1)',
-                            transition: 'all 0.3s ease'
+                            transition: 'all 0.3s ease',
+                            '@media (orientation: landscape) and (max-height: 768px)': {
+                              fontSize: 40
+                            }
                           }} 
                         />
                       )}
