@@ -13,6 +13,8 @@ RUN npm ci
 COPY . .
 
 # Build the app
+ENV GENERATE_SOURCEMAP=false
+ENV DISABLE_ESLINT_PLUGIN=true
 RUN npm run build
 
 # Production stage

@@ -19,8 +19,8 @@ import {
 import { Star, AddCircle, RemoveCircle, Edit, EmojiEvents, Refresh, AutoAwesome, Favorite, Cake, School, SportsScore, CleaningServices, LocalLibrary, Mood, FamilyRestroom, Pets, Check } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback } from "react";
-import Particles from "react-tsparticles";
-import { loadSlim } from "tsparticles-slim";
+import Particles from "@tsparticles/react";
+import { loadSlim } from "@tsparticles/slim";
 
 const rainbowKeyframes = `
 @keyframes rainbow {
