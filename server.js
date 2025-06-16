@@ -55,7 +55,8 @@ function decodeUrlSafeName(urlName) {
 app.get('/api/chart/:name', (req, res) => {
     const childName = decodeUrlSafeName(req.params.name);
     
-    db.get('SELECT * FROM star_charts WHERE child_name = ?', [childName], (err, row) => {
+    // Case-insensitive search since URLs are lowercase but names preserve original case
+    db.get('SELECT * FROM star_charts WHERE LOWER(child_name) = LOWER(?)', [childName], (err, row) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
@@ -114,7 +115,7 @@ app.put('/api/chart/:name', (req, res) => {
     
     db.run(`UPDATE star_charts 
             SET goal_prize = ?, total_stars = ?, current_stars = ?, super_star_value = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE child_name = ?`,
+            WHERE LOWER(child_name) = LOWER(?)`,
         [goalPrize, totalStars, currentStars, superStarValue, childName],
         function(err) {
             if (err) {
@@ -144,7 +145,7 @@ app.put('/api/chart/:name/stars', (req, res) => {
     
     db.run(`UPDATE star_charts 
             SET current_stars = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE child_name = ?`,
+            WHERE LOWER(child_name) = LOWER(?)`,
         [currentStars, childName],
         function(err) {
             if (err) {
