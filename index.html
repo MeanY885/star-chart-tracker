@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Chart Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <!-- Top Right Controls -->
+            <div class="header-controls">
+                <button class="share-btn" id="shareBtn" title="Share Chart">🔗</button>
+                <button class="config-btn" id="configBtn">⚙️</button>
+            </div>
+            
+            <!-- Centered Title -->
+            <div class="header-center">
+                <h1 class="title" id="childName">Star Chart</h1>
+                <div class="star-counter">
+                    <span id="currentStars">0</span>/<span id="totalStars">15</span> ⭐
+                </div>
+                <div class="goal-info">
+                    <span class="goal-label">Goal:</span>
+                    <span id="goalPrize">Special Prize</span>
+                </div>
+            </div>
+            
+            <!-- Left Side Actions -->
+            <div class="header-left">
+                <button class="super-star-btn" id="superBtn" title="Super Star">🌟 Super Star</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="star-grid" id="starGrid">
+                <!-- Stars will be dynamically generated -->
+            </div>
+
+        </main>
+
+        <!-- Configuration Modal -->
+        <div class="modal" id="configModal">
+            <div class="modal-content">
+                <h2>Settings</h2>
+                <div class="config-form">
+                    <div class="form-group">
+                        <label for="childNameInput">Child's Name:</label>
+                        <input type="text" id="childNameInput" placeholder="Enter child's name">
+                    </div>
+                    <div class="form-group">
+                        <label for="goalPrizeInput">Goal Prize:</label>
+                        <input type="text" id="goalPrizeInput" placeholder="Enter the reward/prize">
+                    </div>
+                    <div class="form-group">
+                        <label for="totalStarsInput">Total Stars:</label>
+                        <input type="number" id="totalStarsInput" min="5" max="50" value="15">
+                    </div>
+                    <div class="form-group">
+                        <label for="superStarValueInput">Super Star Value:</label>
+                        <input type="number" id="superStarValueInput" min="2" max="10" value="5">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-save" id="saveConfigBtn">Save</button>
+                    <button class="btn btn-cancel" id="cancelConfigBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Modal -->
+        <div class="modal" id="shareModal">
+            <div class="modal-content">
+                <h2>Share Star Chart</h2>
+                <div class="share-content">
+                    <div class="share-url-section">
+                        <label>Share this URL to access from any device:</label>
+                        <div class="url-input-group">
+                            <input type="text" id="shareUrl" readonly>
+                            <button class="btn btn-copy" id="copyUrlBtn">Copy</button>
+                        </div>
+                    </div>
+                    <div class="qr-section">
+                        <div class="qr-code" id="qrCode"></div>
+                        <p class="qr-instructions">Scan with phone camera to open on mobile</p>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-cancel" id="closeShareBtn">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animation overlay -->
+        <div class="animation-overlay" id="animationOverlay"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
