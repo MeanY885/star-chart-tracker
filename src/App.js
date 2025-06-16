@@ -10,19 +10,13 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Tooltip,
-  Chip,
   Card,
-  CardContent,
-  Fade,
-  Zoom,
-  Slide
+  CardContent
 } from '@mui/material';
 import { 
   Star, 
   StarBorder,
   AddCircle, 
-  Edit, 
   EmojiEvents, 
   Refresh, 
   AutoAwesome, 
@@ -35,7 +29,6 @@ import {
   Mood, 
   FamilyRestroom, 
   Pets, 
-  Check,
   Celebration,
   MusicNote
 } from '@mui/icons-material';
@@ -55,9 +48,7 @@ function App() {
   const [removingStar, setRemovingStar] = useState(false);
   const [removeStarPosition, setRemoveStarPosition] = useState({ x: 0, y: 0 });
   const [isAmazingAnimation, setIsAmazingAnimation] = useState(false);
-  const [recentAnimations, setRecentAnimations] = useState([]);
   const [stickerType, setStickerType] = useState({});
-  const [isEditingReward, setIsEditingReward] = useState(false);
   const [rewardPreview, setRewardPreview] = useState({
     stars: 15,
     reward: "Special Day Out! 🎉",
@@ -66,7 +57,6 @@ function App() {
   const [animationKey, setAnimationKey] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedStarIndex, setSelectedStarIndex] = useState(null);
   const addStarTimeoutRef = useRef(null);
 
   const particlesInit = useParticles(async engine => {
@@ -187,12 +177,8 @@ function App() {
   useEffect(() => {
     loadData();
     
-    // Set up periodic sync every 10 seconds for cross-device updates
-    const syncInterval = setInterval(() => {
-      loadData(false); // Don't show loading spinner for background sync
-    }, 10000);
-    
-    // Also sync when the page becomes visible (user switches back to tab)
+    // Only sync when the page becomes visible (user switches back to tab)
+    // Remove automatic 10-second sync to prevent unwanted resets
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         loadData(false);
@@ -202,7 +188,6 @@ function App() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      clearInterval(syncInterval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [loadData]);
@@ -659,58 +644,194 @@ function App() {
         )}
       </AnimatePresence>
 
-      {/* Main Content */}
+      {/* Main Content - iPad Optimized Layout */}
       <Box
         sx={{
-          minHeight: '100vh',
+          height: '100vh',
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'row',
           position: 'relative',
-          zIndex: 2
+          zIndex: 2,
+          overflow: 'hidden',
+          '@media (max-width: 1024px) and (orientation: portrait)': {
+            flexDirection: 'column'
+          }
         }}
       >
-        {/* Header */}
+        {/* Left Side - Header and Controls */}
         <Box
           sx={{
-            textAlign: 'center',
-            py: { xs: 2, md: 4 },
-            position: 'relative'
+            width: { xs: '100%', lg: '30%' },
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            p: { xs: 2, md: 3 },
+            '@media (max-width: 1024px) and (orientation: portrait)': {
+              width: '100%',
+              height: 'auto',
+              py: 1
+            }
           }}
         >
+          {/* Header */}
           <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8 }}
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.6 }}
           >
             <Typography 
               variant="h1" 
               sx={{ 
-                fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem' },
+                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.8rem', lg: '3.2rem' },
                 fontWeight: 900,
                 background: 'linear-gradient(45deg, #FFD700, #FFA500)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
-                mb: 1
+                mb: { xs: 0.5, md: 1 },
+                textAlign: { xs: 'center', lg: 'left' }
               }}
             >
               ⭐ Millie's Star Chart ⭐
             </Typography>
-            <Typography
-              variant="h5"
-              sx={{
-                color: 'rgba(255,255,255,0.9)',
-                fontWeight: 600,
-                fontSize: { xs: '1rem', md: '1.3rem' }
-              }}
-            >
-              Collect stars and earn amazing rewards! 🎁
-            </Typography>
           </motion.div>
 
+          {/* Progress Card */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+          >
+            <Card
+              sx={{
+                background: 'rgba(255,255,255,0.95)',
+                borderRadius: 3,
+                p: { xs: 2, md: 3 },
+                mb: { xs: 2, md: 3 },
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+                border: '1px solid rgba(255,255,255,0.2)'
+              }}
+            >
+              <CardContent sx={{ textAlign: 'center', p: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
+                  <EmojiEvents sx={{ fontSize: { xs: 32, md: 40 }, color: '#FFD700', mr: 1 }} />
+                  <Typography 
+                    variant="h2" 
+                    sx={{ 
+                      fontWeight: 900,
+                      color: '#333',
+                      fontSize: { xs: '1.5rem', md: '2rem' }
+                    }}
+                  >
+                    {points} / 15
+                  </Typography>
+                </Box>
+                <Typography variant="h6" sx={{ color: '#666', fontWeight: 600, fontSize: { xs: '0.9rem', md: '1rem' } }}>
+                  {15 - points === 0 ? "Ready for your reward! 🎉" : 
+                   15 - points === 1 ? "Just 1 more star to go!" :
+                   `${15 - points} more stars to go!`}
+                </Typography>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Action Buttons */}
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'row', lg: 'column' },
+            gap: { xs: 1, md: 2 }, 
+            flexWrap: 'wrap', 
+            justifyContent: 'center'
+          }}>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant="contained"
+                onClick={handleAddPoint}
+                disabled={points >= 15}
+                sx={{
+                  background: 'linear-gradient(45deg, #4CAF50, #81C784)',
+                  color: 'white',
+                  fontSize: { xs: '0.9rem', md: '1rem' },
+                  fontWeight: 700,
+                  py: { xs: 1, md: 1.5 },
+                  px: { xs: 2, md: 3 },
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  minWidth: { xs: 'auto', lg: '100%' },
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #66BB6A, #4CAF50)'
+                  },
+                  '&:disabled': {
+                    background: 'rgba(0,0,0,0.2)'
+                  }
+                }}
+                startIcon={<AddCircle />}
+              >
+                Add Star
+              </Button>
+            </motion.div>
+
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant="contained"
+                onClick={handleAmazingAchievement}
+                disabled={points >= 15}
+                sx={{
+                  background: 'linear-gradient(45deg, #FF69B4, #FFB74D)',
+                  color: 'white',
+                  fontSize: { xs: '0.9rem', md: '1rem' },
+                  fontWeight: 700,
+                  py: { xs: 1, md: 1.5 },
+                  px: { xs: 2, md: 3 },
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  minWidth: { xs: 'auto', lg: '100%' },
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #FFB74D, #FF69B4)'
+                  },
+                  '&:disabled': {
+                    background: 'rgba(0,0,0,0.2)'
+                  }
+                }}
+                startIcon={<AutoAwesome />}
+              >
+                Amazing! +5
+              </Button>
+            </motion.div>
+
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Button
+                variant="contained"
+                onClick={handleReset}
+                sx={{
+                  background: 'linear-gradient(45deg, #FF7043, #FF8A65)',
+                  color: 'white',
+                  fontSize: { xs: '0.9rem', md: '1rem' },
+                  fontWeight: 700,
+                  py: { xs: 1, md: 1.5 },
+                  px: { xs: 2, md: 3 },
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  minWidth: { xs: 'auto', lg: '100%' },
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #FF8A65, #FF7043)'
+                  }
+                }}
+                startIcon={<Refresh />}
+              >
+                Reset
+              </Button>
+            </motion.div>
+          </Box>
+
           {/* Sound Toggle */}
-          <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+          <Box sx={{ 
+            display: 'flex',
+            justifyContent: { xs: 'center', lg: 'flex-start' },
+            mt: { xs: 1, md: 2 }
+          }}>
             <IconButton
               onClick={() => setSoundEnabled(!soundEnabled)}
               sx={{
@@ -726,165 +847,40 @@ function App() {
           </Box>
         </Box>
 
-        {/* Progress and Controls */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            px: { xs: 2, md: 4 },
-            mb: 4
-          }}
-        >
-          {/* Progress Card */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring" }}
-          >
-            <Card
-              sx={{
-                background: 'rgba(255,255,255,0.95)',
-                borderRadius: 4,
-                p: 3,
-                mb: 3,
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)'
-              }}
-            >
-              <CardContent sx={{ textAlign: 'center', p: 0 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                  <EmojiEvents sx={{ fontSize: 40, color: '#FFD700', mr: 2 }} />
-                  <Typography 
-                    variant="h3" 
-                    sx={{ 
-                      fontWeight: 900,
-                      color: '#333',
-                      fontSize: { xs: '2rem', md: '3rem' }
-                    }}
-                  >
-                    {points} / 15
-                  </Typography>
-                </Box>
-                <Typography variant="h6" sx={{ color: '#666', fontWeight: 600 }}>
-                  {15 - points === 0 ? "Ready for your reward! 🎉" : 
-                   15 - points === 1 ? "Just 1 more star to go!" :
-                   `${15 - points} more stars to go!`}
-                </Typography>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Action Buttons */}
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="contained"
-                onClick={handleAddPoint}
-                disabled={points >= 15}
-                sx={{
-                  background: 'linear-gradient(45deg, #4CAF50, #81C784)',
-                  color: 'white',
-                  fontSize: '1.2rem',
-                  fontWeight: 700,
-                  py: 1.5,
-                  px: 3,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #66BB6A, #4CAF50)'
-                  },
-                  '&:disabled': {
-                    background: 'rgba(0,0,0,0.2)'
-                  }
-                }}
-                startIcon={<AddCircle />}
-              >
-                Add Star
-              </Button>
-            </motion.div>
-
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="contained"
-                onClick={handleAmazingAchievement}
-                disabled={points >= 15}
-                sx={{
-                  background: 'linear-gradient(45deg, #FF69B4, #FFB74D)',
-                  color: 'white',
-                  fontSize: '1.2rem',
-                  fontWeight: 700,
-                  py: 1.5,
-                  px: 3,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #FFB74D, #FF69B4)'
-                  },
-                  '&:disabled': {
-                    background: 'rgba(0,0,0,0.2)'
-                  }
-                }}
-                startIcon={<AutoAwesome />}
-              >
-                Amazing! +5
-              </Button>
-            </motion.div>
-
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="contained"
-                onClick={handleReset}
-                sx={{
-                  background: 'linear-gradient(45deg, #FF7043, #FF8A65)',
-                  color: 'white',
-                  fontSize: '1.2rem',
-                  fontWeight: 700,
-                  py: 1.5,
-                  px: 3,
-                  borderRadius: 3,
-                  textTransform: 'none',
-                  '&:hover': {
-                    background: 'linear-gradient(45deg, #FF8A65, #FF7043)'
-                  }
-                }}
-                startIcon={<Refresh />}
-              >
-                Reset
-              </Button>
-            </motion.div>
-          </Box>
-        </Box>
-
-        {/* Stars Grid */}
+        {/* Right Side - Stars Grid */}
         <Box
           sx={{
             flex: 1,
             display: 'flex',
             justifyContent: 'center',
-            px: { xs: 2, md: 4 },
-            pb: 4
+            alignItems: 'center',
+            p: { xs: 1, md: 2 },
+            '@media (max-width: 1024px) and (orientation: portrait)': {
+              flex: 1,
+              height: 'auto'
+            }
           }}
         >
           <Card
             sx={{
               background: 'rgba(255,255,255,0.95)',
-              borderRadius: 4,
-              p: { xs: 2, md: 4 },
+              borderRadius: 3,
+              p: { xs: 1.5, md: 2 },
               backdropFilter: 'blur(10px)',
               boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
               border: '1px solid rgba(255,255,255,0.2)',
-              maxWidth: '1000px',
-              width: '100%'
+              width: '100%',
+              height: 'fit-content',
+              maxWidth: '600px'
             }}
           >
             <Box
               sx={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(5, 1fr)',
-                gap: { xs: 2, md: 3 },
-                justifyItems: 'center'
+                gap: { xs: 1, sm: 1.5, md: 2 },
+                justifyItems: 'center',
+                alignItems: 'center'
               }}
             >
               {[...Array(15)].map((_, index) => (
@@ -896,7 +892,7 @@ function App() {
                     rotate: 0 
                   }}
                   transition={{ 
-                    delay: index * 0.1,
+                    delay: index * 0.05,
                     type: "spring",
                     stiffness: 200
                   }}
@@ -917,9 +913,11 @@ function App() {
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      p: 1,
+                      p: 0.5,
                       borderRadius: 2,
                       transition: 'all 0.3s ease',
+                      minHeight: { xs: 60, sm: 80, md: 100 },
+                      minWidth: { xs: 60, sm: 80, md: 100 },
                       '&:hover': {
                         backgroundColor: index <= points ? 'rgba(255,215,0,0.1)' : 'transparent'
                       }
@@ -930,7 +928,7 @@ function App() {
                         stickerOptions[stickerType[index] || 0].icon,
                         { 
                           sx: { 
-                            fontSize: { xs: 48, sm: 64, md: 80 },
+                            fontSize: { xs: 40, sm: 56, md: 72 },
                             color: stickerOptions[stickerType[index] || 0].color,
                             filter: `drop-shadow(0 0 8px ${stickerOptions[stickerType[index] || 0].color}80)`,
                             transition: 'all 0.3s ease'
@@ -940,7 +938,7 @@ function App() {
                     ) : (
                       <StarBorder 
                         sx={{ 
-                          fontSize: { xs: 48, sm: 64, md: 80 },
+                          fontSize: { xs: 40, sm: 56, md: 72 },
                           color: index === points ? '#FFD700' : 'rgba(0,0,0,0.2)',
                           transition: 'all 0.3s ease'
                         }} 
@@ -948,28 +946,32 @@ function App() {
                     )}
                     
                     {index < points && (
-                      <Box sx={{ mt: 1, width: '100%', maxWidth: 120 }}>
-                        <TextField
-                          size="small"
-                          value={starComments[index] || ''}
-                          onChange={(e) => {
-                            setStarComments(prev => ({
-                              ...prev,
-                              [index]: e.target.value
-                            }));
-                          }}
-                          placeholder="Comment..."
-                          onClick={(e) => e.stopPropagation()}
-                          sx={{
-                            width: '100%',
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 2,
-                              backgroundColor: 'rgba(255,255,255,0.8)',
-                              fontSize: '0.75rem'
+                      <TextField
+                        size="small"
+                        value={starComments[index] || ''}
+                        onChange={(e) => {
+                          setStarComments(prev => ({
+                            ...prev,
+                            [index]: e.target.value
+                          }));
+                        }}
+                        placeholder=""
+                        onClick={(e) => e.stopPropagation()}
+                        sx={{
+                          mt: 0.5,
+                          width: '100%',
+                          maxWidth: { xs: 50, sm: 70, md: 90 },
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 1,
+                            backgroundColor: 'rgba(255,255,255,0.8)',
+                            fontSize: { xs: '0.6rem', sm: '0.7rem', md: '0.75rem' },
+                            '& input': {
+                              padding: { xs: '4px 6px', md: '6px 8px' },
+                              textAlign: 'center'
                             }
-                          }}
-                        />
-                      </Box>
+                          }
+                        }}
+                      />
                     )}
                   </Box>
                 </motion.div>
