@@ -10,9 +10,14 @@ const db = new StarChartDB();
 app.use(express.json());
 app.use(express.static('build'));
 
-// Load data
+// Load data with better caching headers for cross-device sync
 app.get('/data/star-chart-data.json', async (req, res) => {
   try {
+    // Disable caching to ensure fresh data across devices
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     const data = await db.getCurrentData();
     res.json(data);
   } catch (error) {
@@ -21,14 +26,39 @@ app.get('/data/star-chart-data.json', async (req, res) => {
   }
 });
 
-// Save data
+// Save data with immediate response
 app.post('/data/save', async (req, res) => {
   try {
     await db.saveFullData(req.body);
-    res.json({ success: true });
+    
+    // Set headers to prevent caching
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    res.json({ success: true, timestamp: new Date().toISOString() });
   } catch (error) {
     console.error('Error saving data:', error);
     res.status(500).json({ error: 'Failed to save data' });
+  }
+});
+
+// Add sync endpoint for real-time updates
+app.get('/data/sync', async (req, res) => {
+  try {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    const data = await db.getCurrentData();
+    res.json({ 
+      ...data, 
+      lastUpdated: new Date().toISOString(),
+      serverTime: Date.now()
+    });
+  } catch (error) {
+    console.error('Error syncing data:', error);
+    res.status(500).json({ error: 'Failed to sync data' });
   }
 });
 
