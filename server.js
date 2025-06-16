@@ -11,12 +11,22 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Use in-memory database for now (we'll add persistence later)
-const db = new sqlite3.Database(':memory:', (err) => {
+// Use persistent file-based database
+const fs = require('fs');
+const dataDir = '/app/data';
+const dbPath = '/app/data/star_charts.db';
+
+// Ensure data directory exists
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+    console.log('Created data directory:', dataDir);
+}
+
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err);
     } else {
-        console.log('Connected to SQLite database (in-memory)');
+        console.log('Connected to persistent SQLite database at:', dbPath);
     }
 });
 

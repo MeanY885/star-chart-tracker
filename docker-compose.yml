@@ -7,9 +7,6 @@ services:
       - "4000:4000"
     container_name: star-chart-tracker
     volumes:
-      - star_charts_data:/app/data
+      - ./data:/app/data
     environment:
       - NODE_ENV=production
-
-volumes:
-  star_charts_data:
