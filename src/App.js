@@ -60,6 +60,55 @@ function App() {
     await loadSlim(engine);
   }, []);
 
+  // Sound effects using Web Audio API
+  const playSound = useCallback((type) => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      if (type === 'add') {
+        // Play a cheerful ascending tone for adding stars
+        const frequencies = [523.25, 659.25, 783.99]; // C5, E5, G5 - happy chord
+        frequencies.forEach((freq, index) => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+          
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+          
+          oscillator.start(audioContext.currentTime + index * 0.1);
+          oscillator.stop(audioContext.currentTime + 0.5 + index * 0.1);
+        });
+      } else if (type === 'remove') {
+        // Play a descending tone for removing stars
+        const frequencies = [783.99, 659.25, 523.25]; // G5, E5, C5 - descending
+        frequencies.forEach((freq, index) => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.type = 'triangle';
+          oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+          
+          gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+          
+          oscillator.start(audioContext.currentTime + index * 0.08);
+          oscillator.stop(audioContext.currentTime + 0.4 + index * 0.08);
+        });
+      }
+    } catch (error) {
+      console.warn('Could not play sound:', error);
+    }
+  }, []);
+
   // Load data from server
   useEffect(() => {
     fetch('/data/star-chart-data.json')
@@ -107,7 +156,7 @@ function App() {
   };
 
   useEffect(() => {
-    saveData(points, starComments);
+    saveData(points, starComments, stickerType);
     if (points >= 15) {
       setShowCelebration(true);
     }
@@ -116,6 +165,8 @@ function App() {
   const handleStarClick = (index) => {
     if (index < points) {
       // Removing a star
+      playSound('remove');
+      
       const starElement = document.querySelector(`[data-star-index="${index}"]`);
       if (starElement) {
         const rect = starElement.getBoundingClientRect();
@@ -150,6 +201,9 @@ function App() {
     const newPoints = Math.min(points + 1, 15);
     
     if (newPoints > points) {
+      // Play sound effect
+      playSound('add');
+      
       const edges = [
         { x: Math.random() * window.innerWidth, y: -100 },
         { x: window.innerWidth + 100, y: Math.random() * window.innerHeight },
@@ -196,10 +250,16 @@ function App() {
       setIsAmazingAnimation(true);
       setLastAction('amazing');
       
+      // Play a special sound for amazing achievement
+      playSound('add');
+      
       // Create multiple star animations
       const starsToAdd = newPoints - points;
       for (let i = 0; i < starsToAdd; i++) {
         setTimeout(() => {
+          // Play add sound for each star
+          if (i > 0) playSound('add');
+          
           const targetIndex = points + i;
           const starElement = document.querySelector(`[data-star-index="${targetIndex}"]`);
           if (starElement) {
@@ -381,6 +441,8 @@ function App() {
     animate: () => {
       const animation = generateRandomAnimation();
       const pathPoints = animation.path;
+      
+      console.log(`Using animation path with ${pathPoints.length} points`);
       
       return {
         x: [newStarPosition.x, ...pathPoints.map(p => p.x), targetPosition.x],
@@ -1430,12 +1492,15 @@ function App() {
                             stickerOptions[stickerType[index] || 0].icon,
                             { 
                               sx: { 
-                                fontSize: { xs: 40, sm: 60, md: 80, lg: 100 },
+                                fontSize: { xs: 60, sm: 80, md: 100, lg: 120 },
                                 color: stickerOptions[stickerType[index] || 0].color,
                                 filter: `drop-shadow(0 0 10px ${stickerOptions[stickerType[index] || 0].color}80)`,
                                 transition: 'all 0.3s ease',
+                                '@media (min-width: 768px) and (max-width: 1024px)': {
+                                  fontSize: 100
+                                },
                                 '@media (orientation: landscape) and (max-height: 768px)': {
-                                  fontSize: 40
+                                  fontSize: 60
                                 }
                               }
                             }
@@ -1445,11 +1510,14 @@ function App() {
                       {index >= points && (
                         <Star 
                           sx={{ 
-                            fontSize: { xs: 40, sm: 60, md: 80, lg: 100 },
+                            fontSize: { xs: 60, sm: 80, md: 100, lg: 120 },
                             color: 'rgba(0,0,0,0.1)',
                             transition: 'all 0.3s ease',
+                            '@media (min-width: 768px) and (max-width: 1024px)': {
+                              fontSize: 100
+                            },
                             '@media (orientation: landscape) and (max-height: 768px)': {
-                              fontSize: 40
+                              fontSize: 60
                             }
                           }} 
                         />
