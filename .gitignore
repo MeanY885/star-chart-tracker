@@ -1,0 +1,18 @@
+# Database files - should not be tracked
+data/
+*.db
+
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
