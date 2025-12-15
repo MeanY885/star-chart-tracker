@@ -113,6 +113,15 @@ function App() {
         gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
         oscillator.start(now);
         oscillator.stop(now + 0.3);
+      } else if (type === 'steal') {
+        // Mischievous steal sound (descending slide)
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(600, now);
+        oscillator.frequency.linearRampToValueAtTime(300, now + 0.4);
+        gainNode.gain.setValueAtTime(0.1, now);
+        gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+        oscillator.start(now);
+        oscillator.stop(now + 0.4);
       } else if (type === 'celebration') {
          // Fanfare
          oscillator.type = 'square';
@@ -226,6 +235,18 @@ function App() {
   const handleElf = () => {
     playSound('elf');
     setShowElf(true);
+    
+    // 30% chance the elf steals a star if you have any!
+    if (points > 0 && Math.random() < 0.3) {
+      setTimeout(() => {
+        playSound('steal');
+        const newPoints = points - 1;
+        setPoints(newPoints);
+        saveData(newPoints, stickerType, currentTheme);
+        // Show a "Stolen!" notification or just let the star disappear
+      }, 1500); // Time it with the elf running by
+    }
+    
     setTimeout(() => setShowElf(false), 3000);
   };
 
