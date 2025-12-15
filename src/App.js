@@ -35,7 +35,6 @@ import {
   Forest
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCallback as useParticles } from "react";
 import Particles from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
@@ -83,25 +82,23 @@ function App() {
       buttonAdd: ['#4CAF50', '#81C784'],
       buttonAmazing: ['#FF69B4', '#FFB74D'],
       buttonReset: ['#FF7043', '#FF8A65'],
-      iconColor: '#FFD700',
       font: '"Fredoka One", "Comic Sans MS", cursive'
     },
     christmas: {
       background: 'linear-gradient(135deg, #1a472a 0%, #d42426 100%)',
       headerGradient: 'linear-gradient(45deg, #ffffff, #d42426, #1a472a)',
       cardBg: 'rgba(255,255,255,0.92)',
-      buttonAdd: ['#2e8b57', '#3cb371'], // Sea Green
-      buttonAmazing: ['#d42426', '#ff4d4d'], // Christmas Red
-      buttonReset: ['#8b0000', '#b22222'], // Dark Red
-      buttonElf: ['#4CAF50', '#8BC34A'], // Elf Green
-      iconColor: '#FFD700',
+      buttonAdd: ['#2e8b57', '#3cb371'],
+      buttonAmazing: ['#d42426', '#ff4d4d'],
+      buttonReset: ['#8b0000', '#b22222'],
+      buttonElf: ['#4CAF50', '#8BC34A'],
       font: '"Mountains of Christmas", "Fredoka One", cursive'
     }
   };
 
   const activeTheme = themes[currentTheme];
 
-  const particlesInit = useParticles(async engine => {
+  const particlesInit = useCallback(async engine => {
     await loadSlim(engine);
   }, []);
 
@@ -282,10 +279,8 @@ function App() {
       });
       
       if (response.ok) {
-        const result = await response.json();
-        console.log('Data saved successfully at:', result.timestamp);
-        
-        // Trigger immediate sync on other devices by refreshing data
+        await response.json();
+        // Trigger immediate sync on other devices
         setTimeout(() => loadData(false), 500);
       } else {
         console.error('Failed to save data, status:', response.status);
@@ -293,7 +288,7 @@ function App() {
     } catch (error) {
       console.error('Error saving data:', error);
     }
-  }, [stickerType, loadData]);
+  }, [stickerType, currentTheme, loadData]);
 
   // Debounced save effect
   useEffect(() => {
