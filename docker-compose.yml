@@ -1,65 +1,13 @@
 version: '3.8'
 
 services:
-  # Development service
-  dev:
-    profiles: ["dev"]
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - star-chart-data:/app/data
-    ports:
-      - "1000:1000"
-    environment:
-      - NODE_ENV=development
-    command: npm start
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:1000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Production service
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - star-chart-data:/app/data
+    build: .
     ports:
       - "1000:1000"
-    environment:
-      - NODE_ENV=production
-    restart: always
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:1000', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # Nginx reverse proxy for production
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "1000:80"
-      - "1443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx-cache:/var/cache/nginx
-    depends_on:
-      - app
+      - star-chart-data:/app/data
     restart: always
-    profiles:
-      - production
 
 volumes:
   star-chart-data:
-    driver: local
-  nginx-cache:
-    driver: local 
