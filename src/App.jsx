@@ -51,6 +51,7 @@ function App() {
   const [showElf, setShowElf] = useState(false);
   
   // State for "Edit Star" modal (better for touch screens than inline inputs)
+  const [editingStar, setEditingStar] = useState(null);
   const [animationType, setAnimationType] = useState('curve');
 
   const addStarTimeoutRef = useRef(null);
