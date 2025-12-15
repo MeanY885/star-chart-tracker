@@ -1,25 +1,27 @@
-# Build stage with Node (react-scripts works better here)
-FROM node:20-alpine as build
+# Bun Build Stage
+FROM oven/bun:1 as build
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --legacy-peer-deps
+COPY package.json bun.lockb* ./
+RUN bun install --frozen-lockfile || bun install
 
 COPY . .
-ENV GENERATE_SOURCEMAP=false
-RUN npm run build
+RUN bun run build
 
-# Production stage - lightweight
-FROM node:20-alpine
+# Production Stage
+FROM oven/bun:1-slim
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --omit=dev --legacy-peer-deps
+COPY package.json ./
+RUN bun install --production
 
+# Copy build artifacts
 COPY --from=build /app/build ./build
 COPY server.js database.js ./
 
-RUN mkdir -p /app/data
+# Setup data directory
+RUN mkdir -p /app/data && chown -R bun:bun /app/data
 
+USER bun
 EXPOSE 1000
-CMD ["node", "server.js"]
+CMD ["bun", "run", "server.js"]
