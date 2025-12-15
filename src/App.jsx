@@ -9,7 +9,9 @@ import {
   DialogContent,
   DialogActions,
   Card,
-  LinearProgress
+  LinearProgress,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { 
   Star, 
@@ -49,6 +51,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentTheme, setCurrentTheme] = useState('default');
   const [showElf, setShowElf] = useState(false);
+  const [showElfAlert, setShowElfAlert] = useState(false);
   
   // State for "Edit Star" modal (better for touch screens than inline inputs)
   const [editingStar, setEditingStar] = useState(null);
@@ -261,7 +264,7 @@ function App() {
         const newPoints = points - 1;
         setPoints(newPoints);
         saveData(newPoints, stickerType, currentTheme);
-        // Show a "Stolen!" notification or just let the star disappear
+        setShowElfAlert(true); // Show notification
       }, 1500); // Time it with the elf running by
     }
     
@@ -689,6 +692,28 @@ function App() {
           </Box>
         </DialogContent>
       </Dialog>
+
+      {/* Elf Stole Star Alert */}
+      <Snackbar 
+        open={showElfAlert} 
+        autoHideDuration={4000} 
+        onClose={() => setShowElfAlert(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setShowElfAlert(false)} 
+          severity="warning" 
+          sx={{ 
+            width: '100%', 
+            fontSize: '1.2rem', 
+            alignItems: 'center',
+            '& .MuiAlert-icon': { fontSize: '2rem' }
+          }}
+          icon={<span style={{fontSize: '2rem'}}>🧝</span>}
+        >
+          Oh no! The Naughty Elf stole a star!
+        </Alert>
+      </Snackbar>
 
     </Box>
   );
