@@ -207,9 +207,10 @@ function App() {
       const newPoints = points + 1;
       setPoints(newPoints);
       setShowNewStar(false);
+      playSound('land'); // Play magical chime on landing
       saveData(newPoints, stickerType, currentTheme);
       if (newPoints === 15) setShowCelebration(true);
-    }, 800);
+    }, 1200); // Match animation duration
 
   }, [points, stickerType, currentTheme, saveData, playSound]);
 
@@ -428,7 +429,17 @@ function App() {
               <motion.div
                 key={i}
                 initial={false}
-                animate={{ scale: isFilled ? 1 : 0.9, opacity: isFilled ? 1 : 0.6 }}
+                animate={{ 
+                  scale: isFilled ? [1, 1.4, 1] : 0.9, // Big pop on fill
+                  opacity: isFilled ? 1 : 0.6,
+                  rotate: isFilled ? [0, 15, -15, 0] : 0 // Happy wiggle
+                }}
+                transition={{ 
+                  duration: 0.5,
+                  type: "spring", 
+                  stiffness: 300, 
+                  damping: 15 
+                }}
                 whileTap={{ scale: 0.95 }}
                 style={{ width: '100%', height: '100%' }}
               >
