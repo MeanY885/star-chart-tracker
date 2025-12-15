@@ -2,8 +2,8 @@
 FROM node:20-alpine as build
 
 WORKDIR /app
-COPY package.json ./
-# Use npm install instead of ci to generate a fresh lockfile matching the new dependencies
+COPY package*.json ./
+# Install all dependencies including devDependencies
 RUN npm install
 
 COPY . .
@@ -14,7 +14,7 @@ RUN npm run build
 FROM node:20-alpine
 
 WORKDIR /app
-COPY package.json ./
+COPY package*.json ./
 # Install only production dependencies
 RUN npm install --omit=dev
 
@@ -23,8 +23,10 @@ COPY --from=build /app/build ./build
 COPY server.js database.js ./
 
 # Create data directory
-RUN mkdir -p /app/data && chown -R node:node /app/data
+RUN mkdir -p /app/data
 
-USER node
+# Expose port
 EXPOSE 1000
+
+# Start server (running as root to avoid volume permission issues)
 CMD ["node", "server.js"]
