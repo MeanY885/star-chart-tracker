@@ -189,12 +189,30 @@ function App() {
     saveData(points, stickerType, newTheme);
   };
 
+  const handleStarTap = (index) => {
+    if (index === points) {
+      // Tap empty next slot -> Add Star
+      handleAddPoint({ currentTarget: document.querySelector(`[data-star-index="${index}"]`) });
+    } else if (index < points) {
+      // Tap filled slot -> Edit Sticker
+      setEditingStar(index);
+    }
+  };
+
   const handleAddPoint = useCallback((e) => {
     if (points >= 15) return;
     
-    // Capture click position for animation start
-    const rect = e.currentTarget.getBoundingClientRect();
-    setNewStarPosition({ x: rect.left + rect.width/2, y: rect.top + rect.height/2 });
+    // Capture click position or fallback to center if no event provided
+    let startX = window.innerWidth / 2;
+    let startY = window.innerHeight;
+    
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      startX = rect.left + rect.width/2;
+      startY = rect.top + rect.height/2;
+    }
+    
+    setNewStarPosition({ x: startX, y: startY });
 
     // Find target
     const targetIndex = points;
@@ -396,7 +414,7 @@ function App() {
         }}>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 900, color: activeTheme.text, opacity: 0.7 }}>
-              {currentTheme === 'christmas' ? "Santa's List" : "Star Chart"}
+              {currentTheme === 'christmas' ? "Millie's Christmas" : "Millie's Stars"}
             </Typography>
             <Typography variant="h3" sx={{ fontWeight: 900, color: activeTheme.text }}>
               {points} <Typography component="span" sx={{ fontSize: '0.5em', opacity: 0.5 }}>/ 15</Typography>
@@ -410,7 +428,7 @@ function App() {
               {currentTheme === 'christmas' ? <AcUnit /> : <EmojiEvents />}
             </IconButton>
             <Typography variant="caption" display="block" sx={{ fontWeight: 700, color: activeTheme.text }}>
-              {15 - points} to go!
+              {15 - points === 0 ? "Goal Reached!" : `${15 - points} to go!`}
             </Typography>
           </Box>
         </Card>
@@ -452,42 +470,41 @@ function App() {
                 key={i}
                 initial={false}
                 animate={{ 
-                  scale: isFilled ? [1, 1.4, 1] : 0.9, // Big pop on fill
-                  opacity: isFilled ? 1 : 0.6,
-                  rotate: isFilled ? [0, 15, -15, 0] : 0 // Happy wiggle
+                  scale: isFilled ? [1, 1.1, 1] : 1, 
+                  opacity: isFilled ? 1 : 0.8,
+                  rotate: isFilled ? 0 : 0
                 }}
-                transition={{ 
-                  duration: 0.5,
-                  type: "spring", 
-                  stiffness: 300, 
-                  damping: 15 
-                }}
-                whileTap={{ scale: 0.95 }}
+                whileTap={{ scale: 0.9 }}
                 style={{ width: '100%', height: '100%' }}
               >
                 <Box
                   data-star-index={i}
-                  onClick={() => isFilled && setEditingStar(i)}
+                  onClick={() => handleStarTap(i)}
                   sx={{
                     width: '100%',
                     height: '100%',
                     background: isFilled 
-                      ? (currentTheme === 'christmas' ? 'rgba(212, 36, 38, 0.1)' : 'rgba(255, 215, 0, 0.1)')
-                      : 'rgba(255,255,255,0.3)',
-                    borderRadius: '20px',
+                      ? (currentTheme === 'christmas' ? 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,200,200,0.8))' : 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,200,0.8))')
+                      : 'rgba(255,255,255,0.15)',
+                    borderRadius: '24px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: `2px solid ${isFilled ? (currentTheme === 'christmas' ? '#d42426' : '#FFD700') : 'transparent'}`,
-                    transition: 'all 0.3s ease',
+                    border: isFilled ? 'none' : '2px dashed rgba(255,255,255,0.3)',
+                    boxShadow: isFilled 
+                      ? '0 10px 20px rgba(0,0,0,0.15), inset 0 -5px 15px rgba(0,0,0,0.05)' 
+                      : 'inset 0 2px 10px rgba(0,0,0,0.1)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     position: 'relative',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    cursor: 'pointer'
                   }}
                 >
                   <Icon sx={{ 
                     fontSize: '3.5rem', 
-                    color: isFilled ? stickers[stickerType[i] || 0].color : 'rgba(0,0,0,0.1)',
-                    filter: isFilled ? 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' : 'none'
+                    color: isFilled ? stickers[stickerType[i] || 0].color : 'rgba(255,255,255,0.2)',
+                    filter: isFilled ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' : 'none',
+                    transform: isFilled ? 'scale(1.1)' : 'scale(0.8)'
                   }} />
                 </Box>
               </motion.div>
@@ -517,6 +534,7 @@ function App() {
              </IconButton>
            )}
 
+           {/* Only show Add Star button if not using grid tap interaction? No, keep it for accessibility/visibility but grid is main */}
            <Button
              variant="contained"
              onClick={handleAddPoint}
@@ -533,7 +551,8 @@ function App() {
                color: '#fff',
                boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
                textTransform: 'none',
-               minWidth: '140px'
+               minWidth: '140px',
+               display: { xs: 'none', md: 'block' } // Hide on small screens where grid tap is obvious
              }}
            >
              Add Star
