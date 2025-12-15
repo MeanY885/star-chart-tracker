@@ -2,9 +2,9 @@
 FROM node:20-alpine as build
 
 WORKDIR /app
-COPY package*.json ./
-# Install all dependencies including devDependencies (needed for vite build)
-RUN npm ci
+COPY package.json ./
+# Use npm install instead of ci to generate a fresh lockfile matching the new dependencies
+RUN npm install
 
 COPY . .
 # Build the app using Vite
@@ -14,9 +14,9 @@ RUN npm run build
 FROM node:20-alpine
 
 WORKDIR /app
-COPY package*.json ./
+COPY package.json ./
 # Install only production dependencies
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 # Copy built assets
 COPY --from=build /app/build ./build
