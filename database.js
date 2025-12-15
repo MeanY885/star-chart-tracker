@@ -54,10 +54,18 @@ class StarChartDB {
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
+        CREATE TABLE IF NOT EXISTS theme_settings (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          theme TEXT DEFAULT 'default',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
         -- Insert default settings if none exist
         INSERT OR IGNORE INTO star_chart (id, points) VALUES (1, 0);
         INSERT OR IGNORE INTO reward_settings (id, stars_required, reward_title, reward_description) 
         VALUES (1, 15, 'Special Day Out! 🎉', 'Choose any fun activity for a special family day!');
+        INSERT OR IGNORE INTO theme_settings (id, theme) VALUES (1, 'default');
       `;
 
       this.db.exec(sql, (error) => {
@@ -77,10 +85,12 @@ class StarChartDB {
           sc.points,
           rs.stars_required,
           rs.reward_title,
-          rs.reward_description
+          rs.reward_description,
+          ts.theme
         FROM star_chart sc
         CROSS JOIN reward_settings rs
-        WHERE sc.id = 1 AND rs.id = 1
+        CROSS JOIN theme_settings ts
+        WHERE sc.id = 1 AND rs.id = 1 AND ts.id = 1
       `;
 
       this.db.get(sql, (error, row) => {
@@ -91,7 +101,9 @@ class StarChartDB {
           this.getComments().then(comments => {
             resolve({
               points: row ? row.points : 0,
-              starComments: comments,
+              starComments: comments.comments,
+              stickerTypes: comments.stickerTypes,
+              currentTheme: row ? row.theme : 'default',
               rewardPreview: {
                 stars: row ? row.stars_required : 15,
                 reward: row ? row.reward_title : 'Special Day Out! 🎉',
@@ -211,14 +223,37 @@ class StarChartDB {
     });
   }
 
+  async updateTheme(theme) {
+    return new Promise((resolve, reject) => {
+      const sql = 'UPDATE theme_settings SET theme = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1';
+      
+      this.db.run(sql, [theme], function(error) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve({ success: true, changes: this.changes });
+        }
+      });
+    });
+  }
+
   async saveFullData(data) {
     return new Promise(async (resolve, reject) => {
       try {
         // Update points
-        await this.updatePoints(data.points);
+        if (data.points !== undefined) {
+          await this.updatePoints(data.points);
+        }
+        
+        // Update theme
+        if (data.currentTheme) {
+          await this.updateTheme(data.currentTheme);
+        }
         
         // Update comments and sticker types
-        await this.updateComments(data.starComments, data.stickerTypes);
+        if (data.starComments || data.stickerTypes) {
+          await this.updateComments(data.starComments || {}, data.stickerTypes || {});
+        }
         
         // Update reward settings if provided
         if (data.rewardPreview) {

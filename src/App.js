@@ -30,7 +30,9 @@ import {
   FamilyRestroom, 
   Pets, 
   Celebration,
-  MusicNote
+  MusicNote,
+  AcUnit,
+  Forest
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCallback as useParticles } from "react";
@@ -57,7 +59,47 @@ function App() {
   const [animationKey, setAnimationKey] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentTheme, setCurrentTheme] = useState('default');
+  const [showElf, setShowElf] = useState(false);
   const addStarTimeoutRef = useRef(null);
+
+  const toggleTheme = () => {
+    const newTheme = currentTheme === 'default' ? 'christmas' : 'default';
+    setCurrentTheme(newTheme);
+    saveData(points, starComments, stickerType, rewardPreview, newTheme);
+  };
+
+  const triggerElf = () => {
+    playSound('elf');
+    setShowElf(true);
+    setTimeout(() => setShowElf(false), 4000);
+  };
+
+  const themes = {
+    default: {
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      headerGradient: 'linear-gradient(45deg, #FFD700, #FFA500)',
+      cardBg: 'rgba(255,255,255,0.95)',
+      buttonAdd: ['#4CAF50', '#81C784'],
+      buttonAmazing: ['#FF69B4', '#FFB74D'],
+      buttonReset: ['#FF7043', '#FF8A65'],
+      iconColor: '#FFD700',
+      font: '"Fredoka One", "Comic Sans MS", cursive'
+    },
+    christmas: {
+      background: 'linear-gradient(135deg, #1a472a 0%, #d42426 100%)',
+      headerGradient: 'linear-gradient(45deg, #ffffff, #d42426, #1a472a)',
+      cardBg: 'rgba(255,255,255,0.92)',
+      buttonAdd: ['#2e8b57', '#3cb371'], // Sea Green
+      buttonAmazing: ['#d42426', '#ff4d4d'], // Christmas Red
+      buttonReset: ['#8b0000', '#b22222'], // Dark Red
+      buttonElf: ['#4CAF50', '#8BC34A'], // Elf Green
+      iconColor: '#FFD700',
+      font: '"Mountains of Christmas", "Fredoka One", cursive'
+    }
+  };
+
+  const activeTheme = themes[currentTheme];
 
   const particlesInit = useParticles(async engine => {
     await loadSlim(engine);
@@ -134,6 +176,26 @@ function App() {
           oscillator.start(audioContext.currentTime + index * 0.15);
           oscillator.stop(audioContext.currentTime + 0.3 + index * 0.15);
         });
+      } else if (type === 'elf') {
+        // Mischievous elf sound (high pitched, fast)
+        const melody = [880, 0, 880, 0, 698.46, 783.99, 880];
+        melody.forEach((freq, index) => {
+          if (freq === 0) return;
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.type = 'sawtooth';
+          oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+          
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          
+          oscillator.start(audioContext.currentTime + index * 0.1);
+          oscillator.stop(audioContext.currentTime + 0.1 + index * 0.1);
+        });
       }
     } catch (error) {
       console.warn('Could not play sound:', error);
@@ -158,8 +220,11 @@ function App() {
       if (response.ok) {
         const data = await response.json();
         setPoints(data.points || 0);
-        setStarComments(data.starComments?.comments || {});
-        setStickerType(data.starComments?.stickerTypes || {});
+        setStarComments(data.starComments || {});
+        setStickerType(data.stickerTypes || {});
+        if (data.currentTheme) {
+          setCurrentTheme(data.currentTheme);
+        }
         if (data.rewardPreview) {
           setRewardPreview(data.rewardPreview);
         }
@@ -193,12 +258,13 @@ function App() {
   }, [loadData]);
 
   // Save data to server with better error handling and immediate sync
-  const saveData = useCallback(async (newPoints, newComments, newStickerTypes = null, newRewardPreview = null) => {
+  const saveData = useCallback(async (newPoints, newComments, newStickerTypes = null, newRewardPreview = null, theme = null) => {
     try {
       const payload = {
         points: newPoints,
         starComments: newComments,
-        stickerTypes: newStickerTypes || stickerType
+        stickerTypes: newStickerTypes || stickerType,
+        currentTheme: theme || currentTheme
       };
       
       if (newRewardPreview) {
@@ -233,7 +299,7 @@ function App() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (!isLoading) {
-        saveData(points, starComments, stickerType);
+        saveData(points, starComments, stickerType, null, currentTheme);
       }
     }, 500);
 
@@ -242,7 +308,7 @@ function App() {
     }
 
     return () => clearTimeout(timeoutId);
-  }, [points, starComments, stickerType, saveData, isLoading]);
+  }, [points, starComments, stickerType, currentTheme, saveData, isLoading]);
 
   // Enhanced animation system with truly random selection
   const generateRandomAnimation = useCallback(() => {
@@ -469,7 +535,8 @@ function App() {
     { icon: LocalLibrary, label: 'Reading', color: '#795548' },
     { icon: Mood, label: 'Good Mood', color: '#FFC107' },
     { icon: FamilyRestroom, label: 'Family', color: '#E91E63' },
-    { icon: Pets, label: 'Pets', color: '#607D8B' }
+    { icon: Pets, label: 'Pets', color: '#607D8B' },
+    { icon: currentTheme === 'christmas' ? Forest : EmojiEvents, label: 'Elf', color: '#2e8b57' }
   ];
 
   // Animation variants for the new star
@@ -522,7 +589,23 @@ function App() {
 
   // Particles configuration
   const particlesOptions = {
-    particles: {
+    particles: currentTheme === 'christmas' ? {
+      number: { value: 100 },
+      color: { value: "#ffffff" },
+      shape: { type: "circle" }, // Snowflakes are basically white dots or specialized shapes
+      size: { value: { min: 2, max: 5 } },
+      move: {
+        enable: true,
+        speed: { min: 1, max: 3 },
+        direction: "bottom", // Snow falls down
+        random: true,
+        straight: false,
+        outModes: "out"
+      },
+      opacity: {
+        value: { min: 0.4, max: 0.8 },
+      }
+    } : {
       number: { value: lastAction === 'amazing' ? 100 : 30 },
       color: { value: ["#FFD700", "#FF69B4", "#4CAF50", "#2196F3", "#FF8C00"] },
       shape: { type: "star" },
@@ -554,14 +637,18 @@ function App() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+          background: activeTheme.background
         }}
       >
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          <Star sx={{ fontSize: 80, color: '#FFD700' }} />
+          {currentTheme === 'christmas' ? (
+             <AcUnit sx={{ fontSize: 80, color: '#fff' }} />
+          ) : (
+             <Star sx={{ fontSize: 80, color: '#FFD700' }} />
+          )}
         </motion.div>
       </Box>
     );
@@ -574,14 +661,15 @@ function App() {
       sx={{
         minHeight: '100vh',
         width: '100vw',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        fontFamily: '"Fredoka One", "Comic Sans MS", cursive',
+        background: activeTheme.background,
+        fontFamily: activeTheme.font,
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        transition: 'background 0.5s ease-in-out'
       }}
     >
-      {/* Particles Background */}
-      {(lastAction === 'add' || isAmazingAnimation) && (
+      {/* Particles Background - Always show for Christmas, otherwise conditional */}
+      {(currentTheme === 'christmas' || lastAction === 'add' || isAmazingAnimation) && (
         <Particles
           id="tsparticles"
           init={particlesInit}
@@ -644,6 +732,28 @@ function App() {
         )}
       </AnimatePresence>
 
+      {/* Naughty Elf Animation */}
+      <AnimatePresence>
+        {showElf && (
+          <motion.div
+            initial={{ x: '100vw', y: '50vh', rotate: 0 }}
+            animate={{ 
+              x: ['100vw', '50vw', '0vw', '-50vw'],
+              y: ['50vh', '40vh', '60vh', '50vh'],
+              rotate: [0, -10, 10, 0]
+            }}
+            transition={{ duration: 4, ease: "linear" }}
+            style={{ 
+              position: 'fixed', 
+              zIndex: 2000,
+              fontSize: '150px'
+            }}
+          >
+            🧝
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Content - iPad Optimized Layout */}
       <Box
         sx={{
@@ -684,7 +794,7 @@ function App() {
               sx={{ 
                 fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.8rem', lg: '3.2rem' },
                 fontWeight: 900,
-                background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                background: activeTheme.headerGradient,
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -693,7 +803,7 @@ function App() {
                 textAlign: { xs: 'center', lg: 'left' }
               }}
             >
-              ⭐ Millie's Star Chart ⭐
+              {currentTheme === 'christmas' ? "🎄 Millie's Christmas Chart 🎅" : "⭐ Millie's Star Chart ⭐"}
             </Typography>
           </motion.div>
 
@@ -705,7 +815,7 @@ function App() {
           >
             <Card
               sx={{
-                background: 'rgba(255,255,255,0.95)',
+                background: activeTheme.cardBg,
                 borderRadius: 3,
                 p: { xs: 2, md: 3 },
                 mb: { xs: 2, md: 3 },
@@ -716,7 +826,11 @@ function App() {
             >
               <CardContent sx={{ textAlign: 'center', p: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
-                  <EmojiEvents sx={{ fontSize: { xs: 32, md: 40 }, color: '#FFD700', mr: 1 }} />
+                  {currentTheme === 'christmas' ? (
+                     <Forest sx={{ fontSize: { xs: 32, md: 40 }, color: '#2e8b57', mr: 1 }} />
+                  ) : (
+                     <EmojiEvents sx={{ fontSize: { xs: 32, md: 40 }, color: '#FFD700', mr: 1 }} />
+                  )}
                   <Typography 
                     variant="h2" 
                     sx={{ 
@@ -729,7 +843,7 @@ function App() {
                   </Typography>
                 </Box>
                 <Typography variant="h6" sx={{ color: '#666', fontWeight: 600, fontSize: { xs: '0.9rem', md: '1rem' } }}>
-                  {15 - points === 0 ? "Ready for your reward! 🎉" : 
+                  {15 - points === 0 ? "Ready for your reward! 🎁" : 
                    15 - points === 1 ? "Just 1 more star to go!" :
                    `${15 - points} more stars to go!`}
                 </Typography>
@@ -751,7 +865,7 @@ function App() {
                 onClick={handleAddPoint}
                 disabled={points >= 15}
                 sx={{
-                  background: 'linear-gradient(45deg, #4CAF50, #81C784)',
+                  background: `linear-gradient(45deg, ${activeTheme.buttonAdd[0]}, ${activeTheme.buttonAdd[1]})`,
                   color: 'white',
                   fontSize: { xs: '0.9rem', md: '1rem' },
                   fontWeight: 700,
@@ -761,13 +875,13 @@ function App() {
                   textTransform: 'none',
                   minWidth: { xs: 'auto', lg: '100%' },
                   '&:hover': {
-                    background: 'linear-gradient(45deg, #66BB6A, #4CAF50)'
+                    filter: 'brightness(1.1)'
                   },
                   '&:disabled': {
                     background: 'rgba(0,0,0,0.2)'
                   }
                 }}
-                startIcon={<AddCircle />}
+                startIcon={currentTheme === 'christmas' ? <AcUnit /> : <AddCircle />}
               >
                 Add Star
               </Button>
@@ -779,7 +893,7 @@ function App() {
                 onClick={handleAmazingAchievement}
                 disabled={points >= 15}
                 sx={{
-                  background: 'linear-gradient(45deg, #FF69B4, #FFB74D)',
+                  background: `linear-gradient(45deg, ${activeTheme.buttonAmazing[0]}, ${activeTheme.buttonAmazing[1]})`,
                   color: 'white',
                   fontSize: { xs: '0.9rem', md: '1rem' },
                   fontWeight: 700,
@@ -789,7 +903,7 @@ function App() {
                   textTransform: 'none',
                   minWidth: { xs: 'auto', lg: '100%' },
                   '&:hover': {
-                    background: 'linear-gradient(45deg, #FFB74D, #FF69B4)'
+                    filter: 'brightness(1.1)'
                   },
                   '&:disabled': {
                     background: 'rgba(0,0,0,0.2)'
@@ -806,7 +920,7 @@ function App() {
                 variant="contained"
                 onClick={handleReset}
                 sx={{
-                  background: 'linear-gradient(45deg, #FF7043, #FF8A65)',
+                  background: `linear-gradient(45deg, ${activeTheme.buttonReset[0]}, ${activeTheme.buttonReset[1]})`,
                   color: 'white',
                   fontSize: { xs: '0.9rem', md: '1rem' },
                   fontWeight: 700,
@@ -816,7 +930,7 @@ function App() {
                   textTransform: 'none',
                   minWidth: { xs: 'auto', lg: '100%' },
                   '&:hover': {
-                    background: 'linear-gradient(45deg, #FF8A65, #FF7043)'
+                     filter: 'brightness(1.1)'
                   }
                 }}
                 startIcon={<Refresh />}
@@ -824,13 +938,41 @@ function App() {
                 Reset
               </Button>
             </motion.div>
+
+            {/* Naughty Elf Button - Only visible in Christmas theme */}
+            {currentTheme === 'christmas' && (
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  variant="contained"
+                  onClick={triggerElf}
+                  sx={{
+                    background: `linear-gradient(45deg, ${activeTheme.buttonElf[0]}, ${activeTheme.buttonElf[1]})`,
+                    color: 'white',
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                    fontWeight: 700,
+                    py: { xs: 1, md: 1.5 },
+                    px: { xs: 2, md: 3 },
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    minWidth: { xs: 'auto', lg: '100%' },
+                    '&:hover': {
+                       filter: 'brightness(1.1)'
+                    }
+                  }}
+                  startIcon={<span style={{ fontSize: '1.5em' }}>🧝</span>}
+                >
+                  Elf Watch!
+                </Button>
+              </motion.div>
+            )}
           </Box>
 
-          {/* Sound Toggle */}
+          {/* Sound and Theme Toggles */}
           <Box sx={{ 
             display: 'flex',
             justifyContent: { xs: 'center', lg: 'flex-start' },
-            mt: { xs: 1, md: 2 }
+            mt: { xs: 1, md: 2 },
+            gap: 2
           }}>
             <IconButton
               onClick={() => setSoundEnabled(!soundEnabled)}
@@ -843,6 +985,20 @@ function App() {
               }}
             >
               <MusicNote />
+            </IconButton>
+
+            <IconButton
+              onClick={toggleTheme}
+              sx={{
+                color: currentTheme === 'christmas' ? '#d42426' : '#FFD700',
+                backgroundColor: currentTheme === 'christmas' ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.1)',
+                '&:hover': {
+                  backgroundColor: currentTheme === 'christmas' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.2)'
+                },
+                transition: 'all 0.3s ease'
+              }}
+            >
+              {currentTheme === 'christmas' ? <Forest /> : <AcUnit />}
             </IconButton>
           </Box>
         </Box>
@@ -863,7 +1019,7 @@ function App() {
         >
           <Card
             sx={{
-              background: 'rgba(255,255,255,0.95)',
+              background: activeTheme.cardBg,
               borderRadius: 3,
               p: { xs: 1.5, md: 2 },
               backdropFilter: 'blur(10px)',
@@ -936,13 +1092,24 @@ function App() {
                         }
                       )
                     ) : (
-                      <StarBorder 
-                        sx={{ 
-                          fontSize: { xs: 40, sm: 56, md: 72 },
-                          color: index === points ? '#FFD700' : 'rgba(0,0,0,0.2)',
-                          transition: 'all 0.3s ease'
-                        }} 
-                      />
+                      currentTheme === 'christmas' ? (
+                        <AcUnit 
+                          sx={{ 
+                            fontSize: { xs: 40, sm: 56, md: 72 },
+                            color: index === points ? '#d42426' : 'rgba(255,255,255,0.3)',
+                            transition: 'all 0.3s ease',
+                            opacity: index === points ? 1 : 0.5
+                          }} 
+                        />
+                      ) : (
+                        <StarBorder 
+                          sx={{ 
+                            fontSize: { xs: 40, sm: 56, md: 72 },
+                            color: index === points ? '#FFD700' : 'rgba(0,0,0,0.2)',
+                            transition: 'all 0.3s ease'
+                          }} 
+                        />
+                      )
                     )}
                     
                     {index < points && (
@@ -990,7 +1157,9 @@ function App() {
         PaperProps={{
           sx: {
             borderRadius: 4,
-            background: 'linear-gradient(135deg, #FFE5F1 0%, #FFF6E6 100%)',
+            background: currentTheme === 'christmas' 
+              ? 'linear-gradient(135deg, #e6ffe6 0%, #ffe6e6 100%)'
+              : 'linear-gradient(135deg, #FFE5F1 0%, #FFF6E6 100%)',
             p: 2,
             textAlign: 'center'
           }
@@ -1012,13 +1181,15 @@ function App() {
               variant="h3" 
               sx={{ 
                 fontWeight: 900,
-                background: 'linear-gradient(45deg, #FF69B4, #FFD700)',
+                background: currentTheme === 'christmas'
+                  ? 'linear-gradient(45deg, #d42426, #2e8b57)'
+                  : 'linear-gradient(45deg, #FF69B4, #FFD700)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}
             >
-              🎉 AMAZING MILLIE! 🎉
+              {currentTheme === 'christmas' ? "🎅 MERRY CHRISTMAS MILLIE! 🎄" : "🎉 AMAZING MILLIE! 🎉"}
             </Typography>
           </motion.div>
         </DialogTitle>
@@ -1032,7 +1203,7 @@ function App() {
               mb: 2
             }}
           >
-            You've collected all 15 stars!
+            {currentTheme === 'christmas' ? "You've collected all 15 Christmas stars!" : "You've collected all 15 stars!"}
           </Typography>
           <Typography 
             variant="h6" 
@@ -1041,7 +1212,7 @@ function App() {
               mb: 3
             }}
           >
-            Time for your special reward! 🎁
+            {currentTheme === 'christmas' ? "Santa has a special reward for you! 🎁" : "Time for your special reward! 🎁"}
           </Typography>
           <Box
             sx={{
@@ -1050,7 +1221,11 @@ function App() {
               mb: 2
             }}
           >
-            <Celebration sx={{ fontSize: 80, color: '#FFD700' }} />
+            {currentTheme === 'christmas' ? (
+               <Forest sx={{ fontSize: 80, color: '#2e8b57' }} />
+            ) : (
+               <Celebration sx={{ fontSize: 80, color: '#FFD700' }} />
+            )}
           </Box>
         </DialogContent>
         
@@ -1064,7 +1239,9 @@ function App() {
               variant="contained"
               size="large"
               sx={{ 
-                background: 'linear-gradient(45deg, #FF69B4, #FFD700)',
+                background: currentTheme === 'christmas'
+                  ? 'linear-gradient(45deg, #d42426, #2e8b57)'
+                  : 'linear-gradient(45deg, #FF69B4, #FFD700)',
                 color: 'white',
                 px: 4,
                 py: 2,
@@ -1073,11 +1250,11 @@ function App() {
                 borderRadius: 3,
                 textTransform: 'none',
                 '&:hover': {
-                  background: 'linear-gradient(45deg, #FFD700, #FF69B4)'
+                  filter: 'brightness(1.1)'
                 }
               }}
             >
-              Claim Your Prize! 🎁
+              {currentTheme === 'christmas' ? "Claim Your Christmas Present! 🎁" : "Claim Your Prize! 🎁"}
             </Button>
           </motion.div>
         </DialogActions>
