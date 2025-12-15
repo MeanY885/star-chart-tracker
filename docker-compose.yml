@@ -3,6 +3,7 @@ version: '3.8'
 services:
   # Development service
   dev:
+    profiles: ["dev"]
     build:
       context: .
       dockerfile: Dockerfile
