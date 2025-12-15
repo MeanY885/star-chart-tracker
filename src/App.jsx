@@ -52,6 +52,9 @@ function App() {
   const [currentTheme, setCurrentTheme] = useState('default');
   const [showElf, setShowElf] = useState(false);
   const [showElfAlert, setShowElfAlert] = useState(false);
+  const [elfCharacter, setElfCharacter] = useState('🧝‍♂️');
+  const [stealingState, setStealingState] = useState('none'); // 'none', 'entering', 'grabbing', 'exiting'
+  const [stolenStarIndex, setStolenStarIndex] = useState(null); // Which star is being targeted
   
   // State for "Edit Star" modal (better for touch screens than inline inputs)
   const [editingStar, setEditingStar] = useState(null);
@@ -254,21 +257,60 @@ function App() {
   };
 
   const handleElf = () => {
+    // Pick a random festive character
+    const characters = [
+      { char: '🧝‍♂️', name: 'Naughty Elf', canSteal: true },
+      { char: '🎅', name: 'Santa', canSteal: false },
+      { char: '🦌🛷', name: 'Rudolph', canSteal: false },
+      { char: '☃️', name: 'Snowman', canSteal: false },
+      { char: '🐧', name: 'Polar Bear', canSteal: false }
+    ];
+    const visitor = characters[Math.floor(Math.random() * characters.length)];
+    setElfCharacter(visitor.char);
+
     playSound('elf');
-    setShowElf(true);
     
-    // 30% chance the elf steals a star if you have any!
-    if (points > 0 && Math.random() < 0.3) {
+    // Heist Logic: If it's the elf and there are stars, try to steal one!
+    if (visitor.canSteal && points > 0 && Math.random() < 0.4) { // Increased to 40%
+      const targetIndex = points - 1; // Steal the last star
+      setStolenStarIndex(targetIndex);
+      setStealingState('entering');
+      setShowElf(true);
+
+      // Sequence:
+      // 1. Run to center (1.5s)
+      // 2. Pause & Grab (1s)
+      // 3. Run away with loot (1.5s)
+      
       setTimeout(() => {
+        setStealingState('grabbing');
         playSound('steal');
+      }, 1500);
+
+      setTimeout(() => {
+        setStealingState('exiting');
+        // Actually remove the star data now
         const newPoints = points - 1;
         setPoints(newPoints);
         saveData(newPoints, stickerType, currentTheme);
-        setShowElfAlert(true); // Show notification
-      }, 1500); // Time it with the elf running by
+        setShowElfAlert(true);
+      }, 2500);
+
+      setTimeout(() => {
+        setShowElf(false);
+        setStealingState('none');
+        setStolenStarIndex(null);
+      }, 4000);
+
+    } else {
+      // Just a friendly run-by
+      setStealingState('runby');
+      setShowElf(true);
+      setTimeout(() => {
+        setShowElf(false);
+        setStealingState('none');
+      }, 3000);
     }
-    
-    setTimeout(() => setShowElf(false), 3000);
   };
 
   const handleAmazing = () => {
@@ -592,36 +634,65 @@ function App() {
         )}
       </AnimatePresence>
 
-      {/* Elf Animation - Enhanced Mischievous Peek */}
+      {/* Elf / Character Animation Layer */}
       <AnimatePresence>
         {showElf && (
-          <>
-             {/* Main Elf Run */}
-            <motion.div
-              initial={{ x: '100vw', y: '60%', rotate: 0 }}
-              animate={{ 
-                x: ['100vw', '50vw', '-20vw'],
-                y: ['60%', '55%', '60%'],
-                rotate: [0, -10, 10, 0]
-              }}
-              transition={{ duration: 3, ease: "easeInOut" }}
-              style={{ position: 'fixed', top: 0, left: 0, zIndex: 2000, fontSize: '120px' }}
-            >
-              🧝
-            </motion.div>
-            
-            {/* Sneaky Peek Elf (Top Corner) */}
-            <motion.div
-              initial={{ y: '-100%', x: '80vw' }}
-              animate={{ 
-                y: ['-100%', '0%', '-20%', '0%', '-100%'],
-              }}
-              transition={{ delay: 2.5, duration: 2, ease: "circOut" }}
-               style={{ position: 'fixed', top: 0, left: 0, zIndex: 2000, fontSize: '80px', rotate: '180deg' }}
-            >
-              🧝‍♀️
-            </motion.div>
-          </>
+          <motion.div
+            initial={{ 
+              x: '110vw', 
+              y: '60%', 
+              rotate: 0,
+              scale: 1 
+            }}
+            animate={
+              stealingState === 'runby' ? {
+                x: ['110vw', '-20vw'],
+                y: ['60%', '62%', '58%', '60%'], // Bobbing walk
+                rotate: [0, -5, 5, 0]
+              } : stealingState === 'entering' ? {
+                x: '50vw', // Stop in middle
+                y: '60%',
+                rotate: 0
+              } : stealingState === 'grabbing' ? {
+                scale: [1, 1.2, 1], // Grab effect
+                rotate: [0, -15, 0]
+              } : stealingState === 'exiting' ? {
+                x: '-20vw',
+                y: '60%',
+                rotate: -10
+              } : {}
+            }
+            transition={{ 
+              duration: stealingState === 'runby' ? 3 : 1.5, 
+              ease: stealingState === 'runby' ? "linear" : "easeInOut"
+            }}
+            style={{ 
+              position: 'fixed', 
+              top: 0, 
+              left: 0, 
+              zIndex: 2000, 
+              fontSize: '150px', 
+              filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.3))',
+              marginLeft: '-75px', // Center alignment
+              marginTop: '-75px'
+            }}
+          >
+            {/* If grabbing/exiting, show the star IN HAND */}
+            {(stealingState === 'grabbing' || stealingState === 'exiting') ? (
+              <div style={{ position: 'relative' }}>
+                {elfCharacter}
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  style={{ position: 'absolute', top: 20, right: -20, fontSize: '60px' }}
+                >
+                  ⭐
+                </motion.div>
+              </div>
+            ) : (
+              elfCharacter
+            )}
+          </motion.div>
         )}
       </AnimatePresence>
 
